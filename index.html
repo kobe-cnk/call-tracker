@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Cold Call Tracker — Team</title>
+<style>
+  :root{--bg:#020617;--card:#0f172a;--border:#1e293b;--border2:#334155;
+    --white:#fff;--s200:#e2e8f0;--s300:#cbd5e1;--s400:#94a3b8;--s500:#64748b;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{background:var(--bg);color:var(--white);min-height:100vh;
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:900px;margin:0 auto;padding:16px;}
+  @media(min-width:640px){.wrap{padding:24px;}}
+  svg{display:block;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
+  .brand{font-size:22px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:10px;}
+  .badge{font-size:11px;font-weight:700;letter-spacing:.08em;background:#3730a3;color:#c7d2fe;padding:3px 8px;border-radius:6px;}
+  .mode-pill{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--s400);background:var(--card);border:1px solid var(--border);padding:6px 10px;border-radius:999px;}
+  .mode-dot{width:8px;height:8px;border-radius:999px;background:#f59e0b;}
+  .mode-dot.live{background:#10b981;}
+  .tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:5px;margin-bottom:16px;}
+  .tab{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;border:none;background:none;color:var(--s400);
+    font-family:inherit;font-size:14px;font-weight:600;padding:9px;border-radius:10px;cursor:pointer;transition:.15s;}
+  .tab:hover{color:var(--s200);}
+  .tab.active{background:#1e293b;color:#fff;}
+  .seg{display:inline-flex;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:4px;}
+  .seg button{border:none;background:none;color:var(--s400);font-family:inherit;font-size:13px;font-weight:600;padding:7px 14px;border-radius:8px;cursor:pointer;transition:.15s;}
+  .seg button.active{background:#334155;color:#fff;}
+  .trackbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+  .who{display:flex;align-items:center;gap:8px;}
+  .who label{font-size:12px;color:var(--s500);font-weight:600;}
+  .rightctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  select.sel,input.datein{background:var(--card);border:1px solid var(--border2);color:#fff;font-family:inherit;font-size:14px;font-weight:600;
+    padding:9px 12px;border-radius:12px;outline:none;cursor:pointer;}
+  select.sel{min-width:180px;font-size:15px;}
+  input.datein{color-scheme:dark;}
+  .rangelabel{color:var(--s400);font-size:13px;font-weight:600;margin:0 2px 14px;}
+  .banner{background:#0f172a;border:1px solid #3730a3;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--s300);display:flex;gap:10px;align-items:flex-start;}
+  .banner b{color:#c7d2fe;}
+  .editbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--card);border:1px solid #334155;border-radius:12px;padding:12px 14px;margin-bottom:16px;}
+  .editbar .txt{font-size:13px;color:var(--s300);}
+  .editbar input{background:var(--bg);border:1px solid var(--border2);color:#fff;font-family:inherit;font-size:15px;padding:8px 12px;border-radius:10px;outline:none;width:110px;letter-spacing:2px;}
+  .editbar input:focus{border-color:#6366f1;}
+  .editbar.ok{border-color:#065f46;}
+  .pwerr{color:#fb7185;font-size:13px;}
+
+  .grid-goals{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .grid-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px;}
+  .grid-chips{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:22px;}
+  .gcard,.tile,.chip-stat{background:var(--card);border:1px solid var(--border);border-radius:16px;}
+  .gcard{padding:16px;}
+  .gcard-top{display:flex;align-items:center;justify-content:space-between;}
+  .gcard-top .lbl{display:flex;align-items:center;gap:8px;color:var(--s300);font-weight:600;}
+  .gcard-top .frac{font-size:14px;color:var(--s500);font-variant-numeric:tabular-nums;}
+  .gcard-mid{display:flex;align-items:baseline;gap:8px;margin-top:8px;}
+  .gcard-mid .big{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .gcard-mid .pct{font-size:12px;color:var(--s500);}
+  .bar{margin-top:8px;height:10px;width:100%;border-radius:9999px;background:#1e293b;overflow:hidden;}
+  .bar>div{height:100%;border-radius:9999px;transition:width .2s;}
+  .tile{padding:14px 16px;}
+  .tile .lbl{color:var(--s500);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+  .tile .val{margin-top:4px;font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .chip-stat{padding:12px 16px;}
+  .chip-stat .lbl{color:var(--s500);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+  .chip-stat .val{margin-top:4px;font-size:24px;font-weight:700;}
+
+  .section{display:flex;align-items:center;gap:8px;margin:0 0 8px 4px;}
+  .section .stitle{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--s400);}
+  .section .line{height:1px;flex:1;background:var(--border);}
+  .helper{color:var(--s500);font-size:12px;margin:0 0 12px 4px;}
+
+  .grid4{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:22px;}
+  @media(min-width:560px){.grid4{grid-template-columns:1fr 1fr;}}
+  @media(min-width:900px){.grid4{grid-template-columns:repeat(4,1fr);}}
+
+  .metric{position:relative;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;
+    user-select:none;-webkit-user-select:none;transition:border-color .15s,transform .05s;}
+  .metric:not(.ro){cursor:pointer;}
+  .metric:not(.ro):hover{border-color:var(--accent);}
+  .metric:not(.ro):active{transform:scale(.97);}
+  .metric.ro{opacity:.96;}
+  .metric-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;min-height:36px;}
+  .chip{width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--chipbg);color:var(--chipfg);}
+  .ctrls{display:flex;align-items:center;gap:8px;}
+  .minus{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:9999px;background:#1e293b;color:var(--s300);border:none;cursor:pointer;transition:background .15s;}
+  .minus:hover{background:#334155;}
+  .dot{width:34px;height:34px;border-radius:9999px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:19px;font-weight:700;line-height:1;}
+  .num{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .pctbadge{font-size:15px;font-weight:600;color:var(--s400);margin-left:8px;}
+  .mlabel{margin-top:4px;font-weight:600;color:var(--s200);}
+  .msub{font-size:12px;color:var(--s500);}
+
+  table.lead{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+  table.lead th,table.lead td{padding:11px 12px;text-align:right;font-size:14px;font-variant-numeric:tabular-nums;}
+  table.lead th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--s500);font-weight:700;border-bottom:1px solid var(--border);background:#0b1220;}
+  table.lead td.name,table.lead th.name{text-align:left;}
+  table.lead td.name{font-weight:600;color:var(--s200);}
+  table.lead .role{font-size:11px;color:var(--s500);font-weight:600;margin-left:6px;}
+  table.lead tr:not(:last-child) td{border-bottom:1px solid #131c2e;}
+  table.lead td.demo{color:#34d399;font-weight:700;}
+  table.lead tr.totals td{border-top:1px solid var(--border);font-weight:700;color:#fff;background:#0b1220;}
+  .rank{display:inline-flex;width:20px;color:var(--s500);font-weight:700;}
+
+  .panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px;}
+  .panel h3{margin:0 0 12px;font-size:14px;font-weight:700;color:var(--s200);display:flex;align-items:center;gap:8px;}
+  .addrow{display:flex;gap:8px;flex-wrap:wrap;}
+  .addrow input,.addrow select{background:var(--bg);border:1px solid var(--border2);color:#fff;font-family:inherit;font-size:15px;padding:9px 12px;border-radius:10px;outline:none;}
+  .addrow input.name{flex:1;min-width:150px;}
+  .addrow input.pin{width:130px;letter-spacing:2px;}
+  .addrow input:focus,.addrow select:focus{border-color:#6366f1;}
+  .btn-primary{background:#4f46e5;color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;}
+  .btn-primary:hover{background:#6366f1;}
+  .btn-ghost{background:#1e293b;color:var(--s300);border:none;border-radius:10px;padding:9px 16px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;}
+  .btn-ghost:hover{background:#334155;}
+  .plist{display:flex;flex-direction:column;gap:8px;}
+  .prow{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;flex-wrap:wrap;}
+  .prow .pinfo{min-width:140px;flex:1;}
+  .prow .pn{font-weight:600;color:var(--s200);}
+  .prow .pr{font-size:12px;color:var(--s500);margin-left:8px;}
+  .prow .pnopin{font-size:11px;color:#fbbf24;margin-left:8px;}
+  .goalmini{display:flex;align-items:center;gap:6px;}
+  .goalmini label{font-size:11px;color:var(--s500);}
+  .goalmini input{width:60px;background:var(--card);border:1px solid var(--border2);color:#fff;font-family:inherit;font-size:14px;padding:6px 8px;border-radius:8px;outline:none;text-align:center;}
+  .goalmini input:focus{border-color:#6366f1;}
+  .prowbtns{display:flex;gap:6px;}
+  .iconbtn{background:none;border:1px solid var(--border);color:#94a3b8;cursor:pointer;padding:7px 10px;border-radius:8px;font-size:12px;font-family:inherit;display:inline-flex;align-items:center;gap:5px;}
+  .iconbtn:hover{border-color:var(--border2);color:#fff;}
+  .iconbtn.warn:hover{border-color:#9f1239;color:#fb7185;}
+  label.fld{display:block;}
+  label.fld span{font-size:12px;color:var(--s500);}
+  label.fld input{margin-top:4px;width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:9px 12px;color:#fff;font-size:15px;font-family:inherit;outline:none;}
+  label.fld input:focus{border-color:#6366f1;}
+  .empty{text-align:center;color:var(--s500);font-size:14px;padding:30px 10px;}
+  .danger{color:#fb7185;}
+  .exprow{display:flex;gap:8px;flex-wrap:wrap;}
+
+  @media print{
+    .no-print{display:none!important;}
+    body{background:#fff;color:#000;}
+    .wrap{max-width:none;padding:0;}
+    .rangelabel{color:#333;}
+    table.lead{border-color:#ccc;}
+    table.lead th{background:#eee;color:#333;border-color:#ccc;}
+    table.lead td{color:#111;}
+    table.lead td.name{color:#000;}
+    table.lead td.demo{color:#0a7a52;}
+    table.lead tr.totals td{background:#f3f3f3;color:#000;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="root"></div>
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     CONFIG — fill these two to switch from local preview to a
+     live shared database (Supabase). Leave blank for preview.
+     ============================================================ */
+  var CONFIG = { supabaseUrl: "https://nlhndvwfvnxdrzfrlqqh.supabase.co", supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5saG5kdndmdm54ZHJ6ZnJscXFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMjc3ODcsImV4cCI6MjA5NzgwMzc4N30.v_7fT2oqfWEZT8Sa8rP2-_Bbd2asIyYZ_IoOxt9yTMs" };
+
+  var BLANK = { vm:0,noAnswer:0,pocNotAvailable:0,newPocName:0,demo:0,interestedCallback:0,callback:0,notInterested:0 };
+
+  function svg(p,w){w=w||20;return '<svg width="'+w+'" height="'+w+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';}
+  var IC={
+    voicemail:'<circle cx="6" cy="12" r="4"/><circle cx="18" cy="12" r="4"/><line x1="6" y1="16" x2="18" y2="16"/>',
+    phoneOff:'<path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3.07 8.63 19.5 19.5 0 0 1 .82 4.11 2 2 0 0 1 2.81 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L6.09 9.91"/><line x1="22" y1="2" x2="2" y2="22"/>',
+    userX:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="22" y2="13"/><line x1="22" y1="8" x2="17" y2="13"/>',
+    userPlus:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>',
+    calendarCheck:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="m9 16 2 2 4-4"/>',
+    star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+    phoneForwarded:'<polyline points="18 2 22 6 18 10"/><line x1="14" y1="6" x2="22" y2="6"/><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+    thumbsDown:'<path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/>',
+    minus:'<line x1="5" y1="12" x2="19" y2="12"/>',
+    lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+    award:'<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>',
+    phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+    archive:'<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><line x1="10" y1="12" x2="14" y2="12"/>',
+    restore:'<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-9.5L1 10"/>',
+    download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+    printer:'<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+    key:'<path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3"/>',
+    settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'
+  };
+
+  var DIAL_OUTCOMES=[
+    {key:"vm",label:"Voicemails",sub:"VM left",icon:IC.voicemail,accent:"#0ea5e9",chipbg:"#082f49",chipfg:"#38bdf8"},
+    {key:"noAnswer",label:"No Answer",sub:"No connect",icon:IC.phoneOff,accent:"#71717a",chipbg:"#27272a",chipfg:"#a1a1aa"},
+    {key:"pocNotAvailable",label:"POC Not Available",sub:"Gatekeeper / out",icon:IC.userX,accent:"#64748b",chipbg:"#1e293b",chipfg:"#cbd5e1"},
+    {key:"newPocName",label:"New POC Name",sub:"Got name, not avail.",icon:IC.userPlus,accent:"#6366f1",chipbg:"#1e1b4b",chipfg:"#818cf8"}
+  ];
+  var POC_OUTCOMES=[
+    {key:"demo",label:"Demo Booked",sub:"Scheduled",icon:IC.calendarCheck,accent:"#10b981",chipbg:"#022c22",chipfg:"#34d399"},
+    {key:"interestedCallback",label:"Interested",sub:"Warm \u2014 wants callback",icon:IC.star,accent:"#14b8a6",chipbg:"#042f2e",chipfg:"#2dd4bf"},
+    {key:"callback",label:"Too Busy",sub:"Wants a callback",icon:IC.phoneForwarded,accent:"#f59e0b",chipbg:"#451a03",chipfg:"#fbbf24"},
+    {key:"notInterested",label:"Not Interested",sub:"Passed",icon:IC.thumbsDown,accent:"#f43f5e",chipbg:"#4c0519",chipfg:"#fb7185"}
+  ];
+  var ALL_OUTCOMES=DIAL_OUTCOMES.concat(POC_OUTCOMES);
+
+  function pocOf(c){return (c.demo||0)+(c.interestedCallback||0)+(c.callback||0)+(c.notInterested||0);}
+  function dialsOf(c){return (c.vm||0)+(c.noAnswer||0)+(c.pocNotAvailable||0)+(c.newPocName||0)+pocOf(c);}
+  function pct(n,d){return d>0?Math.round(n/d*100):null;}
+  function uid(){return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m];});}
+  function pad(n){return (n<10?'0':'')+n;}
+  function keyOf(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+  function todayKey(){return keyOf(new Date());}
+  function parseKey(k){return new Date(k+'T00:00:00');}
+  function shortMD(d){return d.toLocaleDateString("en-US",{month:"short",day:"numeric"});}
+  function weekBounds(d){var dd=new Date(d);var off=(dd.getDay()+6)%7;var s=new Date(dd);s.setDate(dd.getDate()-off);var e=new Date(s);e.setDate(s.getDate()+6);return [s,e];}
+  function monthBounds(d){var s=new Date(d.getFullYear(),d.getMonth(),1);var e=new Date(d.getFullYear(),d.getMonth()+1,0);return [s,e];}
+
+  /* ---------------- storage layer ---------------- */
+  var LocalStore={
+    _p(){try{return JSON.parse(localStorage.getItem('cct:people')||'[]');}catch(e){return [];}},
+    _sp(p){localStorage.setItem('cct:people',JSON.stringify(p));},
+    _e(){try{return JSON.parse(localStorage.getItem('cct:entries')||'{}');}catch(e){return {};}},
+    _se(e){localStorage.setItem('cct:entries',JSON.stringify(e));},
+    _patch(id,obj){var p=this._p();for(var i=0;i<p.length;i++){if(p[i].id===id){for(var k in obj)p[i][k]=obj[k];}}this._sp(p);},
+    listPeople:function(){return Promise.resolve(this._p());},
+    addPerson:function(name,role,pin){var p=this._p();var person={id:uid(),name:name,role:role,active:true,pin:pin||null,goal_dials:80,goal_demos:3};p.push(person);this._sp(p);return Promise.resolve(person);},
+    archivePerson:function(id){this._patch(id,{active:false});return Promise.resolve();},
+    restorePerson:function(id){this._patch(id,{active:true});return Promise.resolve();},
+    setPin:function(id,pin){this._patch(id,{pin:pin});return Promise.resolve();},
+    setGoals:function(id,dials,demos){this._patch(id,{goal_dials:dials,goal_demos:demos});return Promise.resolve();},
+    saveEntry:function(pid,day,counts){var e=this._e();e[pid+'|'+day]=counts;this._se(e);return Promise.resolve();},
+    getEntriesRange:function(start,end){var e=this._e();var out=[];for(var k in e){var parts=k.split('|');var day=parts[1];if(day>=start&&day<=end)out.push({person_id:parts[0],day:day,counts:e[k]});}return Promise.resolve(out);},
+    getAllEntries:function(){var e=this._e();var out=[];for(var k in e){var parts=k.split('|');out.push({person_id:parts[0],day:parts[1],counts:e[k]});}return Promise.resolve(out);}
+  };
+
+  function sb(path,opts){opts=opts||{};opts.headers=Object.assign({apikey:CONFIG.supabaseKey,Authorization:'Bearer '+CONFIG.supabaseKey,'Content-Type':'application/json'},opts.headers||{});return fetch(CONFIG.supabaseUrl+'/rest/v1/'+path,opts).then(function(r){return r.text().then(function(t){return t?JSON.parse(t):null;});});}
+  var SupaStore={
+    listPeople:function(){return sb('people?select=*&order=name').then(function(r){return r||[];});},
+    addPerson:function(name,role,pin){return sb('people',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({name:name,role:role,active:true,pin:pin||null,goal_dials:80,goal_demos:3})}).then(function(r){return r&&r[0];});},
+    archivePerson:function(id){return sb('people?id=eq.'+id,{method:'PATCH',body:JSON.stringify({active:false})});},
+    restorePerson:function(id){return sb('people?id=eq.'+id,{method:'PATCH',body:JSON.stringify({active:true})});},
+    setPin:function(id,pin){return sb('people?id=eq.'+id,{method:'PATCH',body:JSON.stringify({pin:pin})});},
+    setGoals:function(id,dials,demos){return sb('people?id=eq.'+id,{method:'PATCH',body:JSON.stringify({goal_dials:dials,goal_demos:demos})});},
+    saveEntry:function(pid,day,counts){return sb('entries?on_conflict=person_id,day',{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({person_id:pid,day:day,counts:counts})});},
+    getEntriesRange:function(start,end){return sb('entries?select=person_id,day,counts&day=gte.'+start+'&day=lte.'+end).then(function(r){return r||[];});},
+    getAllEntries:function(){return sb('entries?select=person_id,day,counts&order=day').then(function(r){return r||[];});}
+  };
+
+  var store=(CONFIG.supabaseUrl&&CONFIG.supabaseKey)?SupaStore:LocalStore;
+  var LIVE=store===SupaStore;
+
+  /* ---------------- gates ---------------- */
+  var ADMIN_PW_B64="TFNBZG1pbjEyMyE=";
+  function checkPw(v){try{return btoa(v)===ADMIN_PW_B64;}catch(e){return false;}}
+  function encPin(v){try{return btoa(v);}catch(e){return v;}}
+  function decPin(v){try{return v?atob(v):'';}catch(e){return '';}}
+  function checkPin(v,person){try{return person&&person.pin&&btoa(v)===person.pin;}catch(e){return false;}}
+  var adminUnlocked=false; try{adminUnlocked=sessionStorage.getItem('cct:admin')==='1';}catch(e){}
+  var editUnlocked={}; try{(JSON.parse(sessionStorage.getItem('cct:edit')||'[]')).forEach(function(id){editUnlocked[id]=true;});}catch(e){}
+  function saveEdit(){try{sessionStorage.setItem('cct:edit',JSON.stringify(Object.keys(editUnlocked)));}catch(e){}}
+  var pwError=false, pinError=false;
+
+  /* ---------------- sample seed (preview only) ---------------- */
+  function seedIfNeeded(){
+    if(LIVE)return Promise.resolve();
+    if(localStorage.getItem('cct:seeded'))return Promise.resolve();
+    var samples=[['Marcus Bell','SDR','1234',90,4],['Priya Shah','SDR','2345',80,3],['Devin Cole','AE','3456',60,2]];
+    var people=samples.map(function(s){return {id:uid(),name:s[0],role:s[1],active:true,pin:s[2]?encPin(s[2]):null,goal_dials:s[3],goal_demos:s[4]};});
+    localStorage.setItem('cct:people',JSON.stringify(people));
+    var e={};var today=new Date();function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+    for(var i=0;i<28;i++){var d=new Date(today);d.setDate(today.getDate()-i);var dow=d.getDay();if(dow===0||dow===6)continue;
+      people.forEach(function(p){e[p.id+'|'+keyOf(d)]={vm:rnd(4,14),noAnswer:rnd(6,20),pocNotAvailable:rnd(2,8),newPocName:rnd(1,5),demo:rnd(0,3),interestedCallback:rnd(0,4),callback:rnd(1,6),notInterested:rnd(3,11)};});}
+    localStorage.setItem('cct:entries',JSON.stringify(e));
+    localStorage.setItem('cct:seeded','1');
+    return Promise.resolve();
+  }
+
+  /* ---------------- state ---------------- */
+  var state={tab:'track',period:'daily',personId:null,day:todayKey()};
+  var cache={people:[],entries:[]};
+  try{var s=JSON.parse(localStorage.getItem('cct:ui')||'{}');state.tab=s.tab||'track';state.period=s.period||'daily';state.personId=s.personId||null;}catch(e){}
+  function saveUi(){localStorage.setItem('cct:ui',JSON.stringify({tab:state.tab,period:state.period,personId:state.personId}));}
+  function personById(id){for(var i=0;i<cache.people.length;i++)if(cache.people[i].id===id)return cache.people[i];return null;}
+  function activePeople(){return cache.people.filter(function(p){return p.active!==false;});}
+  function archivedPeople(){return cache.people.filter(function(p){return p.active===false;});}
+
+  function aggFor(pid){var c={};for(var k in BLANK)c[k]=0;cache.entries.forEach(function(r){if(r.person_id===pid){for(var kk in BLANK)c[kk]+=(r.counts[kk]||0);}});return c;}
+  function goalHits(pid,gd,gm){var days={};cache.entries.forEach(function(r){if(r.person_id===pid)days[r.day]=r.counts;});var logged=0,dh=0,mh=0;Object.keys(days).forEach(function(day){var c=days[day];if(dialsOf(c)>0){logged++;if(dialsOf(c)>=gd)dh++;if((c.demo||0)>=gm)mh++;}});return {logged:logged,dialsHit:dh,demosHit:mh};}
+  function rangeKeys(){if(state.period==='daily')return [state.day,state.day];var t=new Date();if(state.period==='weekly'){var w=weekBounds(t);return [keyOf(w[0]),keyOf(w[1])];}var m=monthBounds(t);return [keyOf(m[0]),keyOf(m[1])];}
+  function rangeLabel(){if(state.period==='daily'){var d=parseKey(state.day);var lbl=d.toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"});return state.day===todayKey()?('Today \u00B7 '+lbl):lbl;}var t=new Date();if(state.period==='weekly'){var w=weekBounds(t);return 'This week \u00B7 '+shortMD(w[0])+' \u2013 '+shortMD(w[1]);}return t.toLocaleDateString("en-US",{month:"long",year:"numeric"});}
+
+  function refresh(){var rk=rangeKeys();return Promise.all([store.listPeople(),store.getEntriesRange(rk[0],rk[1])]).then(function(res){
+    cache.people=res[0]||[];cache.entries=res[1]||[];
+    var act=activePeople();
+    if(!state.personId||!act.some(function(p){return p.id===state.personId;}))state.personId=act.length?act[0].id:null;
+    render();
+  });}
+
+  function bump(key,delta){
+    if(state.period!=='daily'||!state.personId||!editUnlocked[state.personId])return;
+    var day=state.day,pid=state.personId,row=null;
+    for(var i=0;i<cache.entries.length;i++){if(cache.entries[i].person_id===pid&&cache.entries[i].day===day){row=cache.entries[i];break;}}
+    if(!row){row={person_id:pid,day:day,counts:{}};cache.entries.push(row);}
+    row.counts[key]=Math.max(0,(row.counts[key]||0)+delta);
+    store.saveEntry(pid,day,row.counts);
+    render();
+  }
+
+  /* ---------------- render bits ---------------- */
+  function metricCard(m,value,dials,readonly){
+    var badge=dials>0?'<span class="pctbadge">'+Math.round(value/dials*100)+'%</span>':'';
+    var ctrls=readonly?'':'<div class="ctrls"><button class="minus" data-action="dec" data-key="'+m.key+'">'+svg(IC.minus,16)+'</button><div class="dot">+</div></div>';
+    var click=readonly?'':' data-action="inc" data-key="'+m.key+'"';
+    return '<div class="metric'+(readonly?' ro':'')+'"'+click+' style="--accent:'+m.accent+';--chipbg:'+m.chipbg+';--chipfg:'+m.chipfg+'">'
+      +'<div class="metric-top"><div class="chip">'+svg(m.icon,20)+'</div>'+ctrls+'</div>'
+      +'<div class="num">'+value+badge+'</div><div class="mlabel">'+m.label+'</div><div class="msub">'+m.sub+'</div></div>';
+  }
+  function goalCard(label,value,goal,bar,icon,iconColor){var w=goal>0?Math.min(100,Math.round(value/goal*100)):0;
+    return '<div class="gcard"><div class="gcard-top"><span class="lbl"><span style="color:'+iconColor+'">'+svg(icon,16)+'</span>'+label+'</span><span class="frac">'+value+' / '+goal+'</span></div>'
+      +'<div class="gcard-mid"><span class="big">'+value+'</span><span class="pct">'+w+'%</span></div><div class="bar"><div style="width:'+w+'%;background:'+bar+'"></div></div></div>';}
+  function chip(label,val,color){return '<div class="chip-stat"><div class="lbl">'+label+'</div><div class="val" style="color:'+(color||'#fff')+'">'+val+'</div></div>';}
+  function goalHitCard(label,hit,days,target,bar,icon,iconColor){var w=days>0?Math.round(hit/days*100):0;return '<div class="gcard"><div class="gcard-top"><span class="lbl"><span style="color:'+iconColor+'">'+svg(icon,16)+'</span>'+label+'</span><span class="frac">'+hit+' / '+days+' days</span></div><div class="gcard-mid"><span class="big">'+hit+'</span><span class="pct">days hit \u00B7 '+target+'+/day'+(days>0?' \u00B7 '+w+'%':'')+'</span></div><div class="bar"><div style="width:'+w+'%;background:'+bar+'"></div></div></div>';}
+  function tile(label,val,color){return '<div class="tile"><div class="lbl">'+label+'</div><div class="val"'+(color?' style="color:'+color+'"':'')+'>'+val+'</div></div>';}
+
+  function tabsHtml(){function t(id,icon,label){return '<button class="tab'+(state.tab===id?' active':'')+'" data-action="tab" data-tab="'+id+'">'+svg(icon,16)+label+'</button>';}
+    return '<div class="tabs no-print">'+t('track',IC.phone,'Track')+t('team',IC.award,'Team')+t('admin',IC.settings,'Admin')+'</div>';}
+  function segHtml(){function s(id,label){return '<button class="'+(state.period===id?'active':'')+'" data-action="period" data-period="'+id+'">'+label+'</button>';}
+    return '<div class="seg">'+s('daily','Daily')+s('weekly','Weekly')+s('monthly','Monthly')+'</div>';}
+  function dateHtml(){if(state.period!=='daily')return '';return '<input class="datein" type="date" id="dayPick" value="'+state.day+'" max="'+todayKey()+'">';}
+
+  function renderTrack(){
+    var act=activePeople();
+    if(!act.length)return '<div class="empty">No reps yet. Open <b>Admin</b> to add your SDRs &amp; AEs.</div>';
+    var opts=act.map(function(p){return '<option value="'+p.id+'"'+(p.id===state.personId?' selected':'')+'>'+esc(p.name)+' \u00B7 '+esc(p.role)+'</option>';}).join('');
+    var html='<div class="trackbar"><div class="who"><label>Rep</label><select class="sel" id="personSel">'+opts+'</select></div><div class="rightctl">'+dateHtml()+segHtml()+'</div></div>';
+    html+='<div class="rangelabel">'+rangeLabel()+'</div>';
+    var person=personById(state.personId);
+    var c=aggFor(state.personId),dials=dialsOf(c),poc=pocOf(c),connect=pct(poc,dials),conv=pct(c.demo,poc);
+    var editable=false;
+    if(state.period==='daily'){
+      if(editUnlocked[state.personId]){
+        editable=true;
+        html+='<div class="editbar ok"><span style="color:#34d399">'+svg(IC.key,16)+'</span><span class="txt">Editing <b>'+esc(person.name)+'</b> \u2014 tap cards to log.</span><button class="btn-ghost" data-action="edit-lock">'+svg(IC.lock,14)+' Lock</button></div>';
+      } else {
+        var hasPin=person&&person.pin;
+        var msg=hasPin?('Enter <b>'+esc(person.name)+'\u2019s</b> PIN to log calls.'):('Create a PIN for <b>'+esc(person.name)+'</b> to start logging (4\u20136 digits).');
+        var act2=hasPin?'edit-unlock':'edit-setpin';var btn=hasPin?'Unlock':'Set PIN';
+        html+='<div class="editbar"><span style="color:#818cf8">'+svg(IC.lock,16)+'</span><span class="txt">'+msg+'</span>'
+          +'<input id="editPin" type="password" inputmode="numeric" maxlength="6" placeholder="PIN" />'
+          +'<button class="btn-primary" data-action="'+act2+'">'+btn+'</button>'
+          +(pinError?'<span class="pwerr">Incorrect PIN.</span>':'')+'</div>';
+      }
+    }
+    if(state.period==='daily'){
+      html+='<div class="grid-goals">'+goalCard('Dials',dials,person.goal_dials||80,'#6366f1',IC.phone,'#818cf8')+goalCard('Demos',c.demo,person.goal_demos||3,'#10b981',IC.calendarCheck,'#34d399')+'</div>';
+      html+='<div class="grid-chips">'+chip('POC Reached',poc,'#c4b5fd')+chip('Connect Rate',connect===null?'\u2014':connect+'%','#7dd3fc')+chip('Demo Conv.',conv===null?'\u2014':conv+'%','#6ee7b7')+'</div>';
+      if(editable)html+='<p class="helper">One tap per call \u2014 Dials &amp; POC total themselves. The % on each card is its share of total dials.</p>';
+      else html+='<p class="helper">Viewing only. Unlock with the PIN above to log calls.</p>';
+    } else {
+      var gh=goalHits(state.personId,person.goal_dials||80,person.goal_demos||3);
+      html+='<div class="grid-goals">'+goalHitCard('Dials goal',gh.dialsHit,gh.logged,person.goal_dials||80,'#6366f1',IC.phone,'#818cf8')+goalHitCard('Demos goal',gh.demosHit,gh.logged,person.goal_demos||3,'#10b981',IC.calendarCheck,'#34d399')+'</div>';
+      html+='<div class="grid-tiles">'+tile('Dials',dials)+tile('POC',poc)+tile('Demos',c.demo,'#34d399')+'</div>';
+      html+='<div class="grid-chips" style="grid-template-columns:1fr 1fr;">'+chip('Connect Rate',connect===null?'\u2014':connect+'%','#7dd3fc')+chip('Demo Conv.',conv===null?'\u2014':conv+'%','#6ee7b7')+'</div>';
+    }
+    var ro=!editable;
+    html+='<div class="section"><span class="stitle">Didn\u2019t connect</span><span class="line"></span></div><div class="grid4">';
+    DIAL_OUTCOMES.forEach(function(m){html+=metricCard(m,c[m.key]||0,dials,ro);});html+='</div>';
+    html+='<div class="section"><span style="color:#a78bfa">'+svg(IC.users,14)+'</span><span class="stitle">Reached a person (POC)</span><span class="line"></span></div><div class="grid4">';
+    POC_OUTCOMES.forEach(function(m){html+=metricCard(m,c[m.key]||0,dials,ro);});html+='</div>';
+    return html;
+  }
+
+  function renderTeam(){
+    var act=activePeople();
+    var html='<div class="trackbar no-print"><div class="who"><span style="color:#fbbf24">'+svg(IC.award,18)+'</span><b style="font-size:15px">Team Leaderboard</b></div><div class="rightctl">'+dateHtml()+segHtml()+'</div></div>';
+    html+='<div class="rangelabel">'+rangeLabel()+'</div>';
+    if(!act.length)return html+'<div class="empty">No reps yet. Add your team in <b>Admin</b>.</div>';
+    var rows=act.map(function(p){var a=aggFor(p.id);return {p:p,a:a,dials:dialsOf(a),poc:pocOf(a),demo:a.demo||0};});
+    rows.sort(function(x,y){return y.demo-x.demo||y.dials-x.dials;});
+    var tot={};for(var k in BLANK)tot[k]=0;rows.forEach(function(r){for(var kk in BLANK)tot[kk]+=r.a[kk];});
+    var tDials=dialsOf(tot),tPoc=pocOf(tot);
+    var body=rows.map(function(r,i){var connect=pct(r.poc,r.dials),conv=pct(r.demo,r.poc);
+      return '<tr><td class="name"><span class="rank">'+(i+1)+'</span>'+esc(r.p.name)+'<span class="role">'+esc(r.p.role)+'</span></td>'
+        +'<td>'+r.dials+'</td><td>'+r.poc+'</td><td class="demo">'+r.demo+'</td><td>'+(connect===null?'\u2014':connect+'%')+'</td><td>'+(conv===null?'\u2014':conv+'%')+'</td></tr>';}).join('');
+    var totRow='<tr class="totals"><td class="name">Team total</td><td>'+tDials+'</td><td>'+tPoc+'</td><td>'+(tot.demo||0)+'</td><td>'+(pct(tPoc,tDials)===null?'\u2014':pct(tPoc,tDials)+'%')+'</td><td>'+(pct(tot.demo,tPoc)===null?'\u2014':pct(tot.demo,tPoc)+'%')+'</td></tr>';
+    html+='<table class="lead"><thead><tr><th class="name">Rep</th><th>Dials</th><th>POC</th><th>Demos</th><th>Conn%</th><th>Conv%</th></tr></thead><tbody>'+body+totRow+'</tbody></table>';
+    html+='<div class="exprow no-print" style="margin-top:14px"><button class="btn-ghost" data-action="export-team">'+svg(IC.download,15)+' Export CSV</button><button class="btn-ghost" data-action="print">'+svg(IC.printer,15)+' Print / Save PDF</button></div>';
+    return html;
+  }
+
+  function renderAdmin(){
+    var html='<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn-ghost" data-action="admin-lock">'+svg(IC.lock,15)+' Lock admin</button></div>';
+    html+='<div class="panel"><h3>'+svg(IC.userPlus,16)+' Add a rep</h3><div class="addrow"><input class="name" id="newName" placeholder="Full name" /><select id="newRole"><option value="SDR">SDR</option><option value="AE">AE</option></select><input class="pin" id="newPin" type="text" inputmode="numeric" maxlength="6" placeholder="PIN (4\u20136 digits)" /><button class="btn-primary" data-action="add-person">Add</button></div><p style="font-size:12px;color:var(--s500);margin:10px 2px 0">Set the rep\u2019s PIN here \u2014 they\u2019ll enter it to log their calls.</p></div>';
+    var act=activePeople();
+    html+='<div class="panel"><h3>'+svg(IC.users,16)+' Active team ('+act.length+')</h3>';
+    if(!act.length)html+='<div class="empty">No one added yet.</div>';
+    else{html+='<div class="plist">'+act.map(function(p){
+      return '<div class="prow"><div class="pinfo"><span class="pn">'+esc(p.name)+'</span><span class="pr">'+esc(p.role)+'</span>'+(p.pin?'<span class="pr">PIN '+esc(decPin(p.pin))+'</span>':'<span class="pnopin">no PIN</span>')+'</div>'
+        +'<div class="goalmini"><label>Dials</label><input type="number" min="0" value="'+(p.goal_dials||80)+'" data-action="goal" data-id="'+p.id+'" data-field="goal_dials"><label>Demos</label><input type="number" min="0" value="'+(p.goal_demos||3)+'" data-action="goal" data-id="'+p.id+'" data-field="goal_demos"></div>'
+        +'<div class="prowbtns"><button class="iconbtn" data-action="reset-pin" data-id="'+p.id+'" title="Set a new PIN for this rep">'+svg(IC.key,14)+' Reset PIN</button><button class="iconbtn warn" data-action="archive" data-id="'+p.id+'">'+svg(IC.archive,14)+' Archive</button></div></div>';}).join('')+'</div>';}
+    html+='</div>';
+    var arch=archivedPeople();
+    if(arch.length){html+='<div class="panel"><h3>'+svg(IC.archive,16)+' Archived ('+arch.length+')</h3><div class="plist">'+arch.map(function(p){
+      return '<div class="prow"><div class="pinfo"><span class="pn" style="color:var(--s400)">'+esc(p.name)+'</span><span class="pr">'+esc(p.role)+'</span></div><div class="prowbtns"><button class="iconbtn" data-action="restore" data-id="'+p.id+'">'+svg(IC.restore,14)+' Restore</button></div></div>';}).join('')+'</div><p style="font-size:12px;color:var(--s500);margin:10px 2px 0">Archived reps keep all their history and are hidden from the dropdown &amp; leaderboard.</p></div>';}
+    html+='<div class="panel"><h3>'+svg(IC.download,16)+' Export</h3><div class="exprow"><button class="btn-ghost" data-action="export-full">'+svg(IC.download,15)+' Full history (CSV)</button></div><p style="font-size:12px;color:var(--s500);margin:10px 2px 0">One row per rep per day \u2014 opens in Excel or Google Sheets.</p></div>';
+    if(!LIVE)html+='<div class="panel"><h3 class="danger">Preview data</h3><p style="font-size:13px;color:var(--s400);margin:0 0 12px">Sample reps &amp; numbers are loaded so you can explore. Clear them before going live.</p><button class="btn-ghost" data-action="clear-all">Clear all preview data</button></div>';
+    return html;
+  }
+
+  function renderAdminLock(){
+    var err=pwError?'<div style="color:#fb7185;font-size:13px;margin-top:10px">Incorrect password.</div>':'';
+    return '<div class="panel" style="max-width:420px;margin:28px auto;text-align:center">'
+      +'<div style="width:48px;height:48px;border-radius:14px;background:#1e1b4b;color:#818cf8;display:flex;align-items:center;justify-content:center;margin:4px auto 14px">'+svg(IC.lock,22)+'</div>'
+      +'<h3 style="justify-content:center">Admin access</h3>'
+      +'<p style="font-size:13px;color:var(--s400);margin:0 0 16px">Enter the admin password to manage reps and goals.</p>'
+      +'<input id="adminPw" type="password" placeholder="Password" autocomplete="off" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:#fff;font-family:inherit;font-size:15px;padding:10px 12px;border-radius:10px;outline:none" />'
+      +err+'<button class="btn-primary" data-action="admin-unlock" style="width:100%;margin-top:14px">Unlock</button></div>';
+  }
+
+  function render(){
+    var html='<div class="topbar no-print"><div class="brand">'+svg(IC.phone,20)+' Cold Call Tracker <span class="badge">TEAM</span></div><div class="mode-pill"><span class="mode-dot'+(LIVE?' live':'')+'"></span>'+(LIVE?'Synced':'Local preview')+'</div></div>';
+    html+=tabsHtml();
+    if(!LIVE)html+='<div class="banner no-print"><span style="color:#818cf8">'+svg(IC.settings,18)+'</span><div>You\u2019re in <b>local preview</b> \u2014 the full experience works, but numbers stay on this device only. Connect your database to sync everyone (see chat for setup).</div></div>';
+    if(state.tab==='track')html+=renderTrack();
+    else if(state.tab==='team')html+=renderTeam();
+    else html+=(adminUnlocked?renderAdmin():renderAdminLock());
+    document.getElementById('root').innerHTML=html;
+  }
+
+  /* ---------------- export ---------------- */
+  function downloadCSV(filename,rows){
+    var csv=rows.map(function(r){return r.map(function(c){var sv=String(c==null?'':c);return /[",\n]/.test(sv)?'"'+sv.replace(/"/g,'""')+'"':sv;}).join(',');}).join('\n');
+    var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(url);a.remove();},150);
+  }
+  var OUT_HEADERS=ALL_OUTCOMES.map(function(m){return m.label;});
+  function exportTeam(){
+    var head=['Rep','Role'].concat(OUT_HEADERS).concat(['Dials','POC','Demos','Connect %','Demo Conv %']);
+    var rows=[head];
+    activePeople().forEach(function(p){var a=aggFor(p.id);var dials=dialsOf(a),poc=pocOf(a);
+      var line=[p.name,p.role];ALL_OUTCOMES.forEach(function(m){line.push(a[m.key]||0);});
+      line.push(dials,poc,a.demo||0,pct(poc,dials)===null?'':pct(poc,dials),pct(a.demo,poc)===null?'':pct(a.demo,poc));rows.push(line);});
+    downloadCSV('team-'+state.period+'-'+todayKey()+'.csv',rows);
+  }
+  function exportFull(){
+    store.getAllEntries().then(function(all){
+      var head=['Date','Rep','Role'].concat(OUT_HEADERS).concat(['Dials','POC','Demos']);
+      var rows=[head];
+      all.sort(function(a,b){return a.day<b.day?1:-1;});
+      all.forEach(function(r){var p=personById(r.person_id);if(!p)return;var c=r.counts||{};
+        var line=[r.day,p.name,p.role];ALL_OUTCOMES.forEach(function(m){line.push(c[m.key]||0);});
+        line.push(dialsOf(c),pocOf(c),c.demo||0);rows.push(line);});
+      downloadCSV('cold-call-history-'+todayKey()+'.csv',rows);
+    });
+  }
+
+  /* ---------------- events ---------------- */
+  var root=document.getElementById('root');
+  function tryPin(create){
+    var inp=document.getElementById('editPin');if(!inp)return;var v=(inp.value||'').trim();var person=personById(state.personId);
+    if(create){
+      if(!/^\d{4,6}$/.test(v)){pinError=true;render();return;}
+      store.setPin(state.personId,encPin(v)).then(function(){editUnlocked[state.personId]=true;saveEdit();pinError=false;refresh();});
+    } else {
+      if(checkPin(v,person)){editUnlocked[state.personId]=true;saveEdit();pinError=false;render();}
+      else{pinError=true;render();}
+    }
+  }
+  root.addEventListener('keydown',function(e){
+    if(e.key!=='Enter')return;
+    if(e.target.id==='adminPw'){var v=e.target.value;if(checkPw(v)){adminUnlocked=true;pwError=false;try{sessionStorage.setItem('cct:admin','1');}catch(e2){}render();}else{pwError=true;render();}}
+    else if(e.target.id==='editPin'){var person=personById(state.personId);tryPin(!(person&&person.pin));}
+  });
+  root.addEventListener('change',function(e){
+    var t=e.target;
+    if(t.id==='personSel'){state.personId=t.value;pinError=false;saveUi();render();}
+    else if(t.id==='dayPick'){state.day=t.value||todayKey();refresh();}
+    else if(t.getAttribute&&t.getAttribute('data-action')==='goal'){
+      var id=t.getAttribute('data-id'),field=t.getAttribute('data-field'),val=Math.max(0,parseInt(t.value,10)||0),p=personById(id);if(!p)return;
+      p[field]=val;store.setGoals(id,p.goal_dials||80,p.goal_demos||3);
+    }
+  });
+  root.addEventListener('click',function(e){
+    var el=e.target.closest('[data-action]');if(!el)return;var a=el.getAttribute('data-action');
+    if(a==='tab'){state.tab=el.getAttribute('data-tab');pwError=false;pinError=false;saveUi();render();}
+    else if(a==='period'){state.period=el.getAttribute('data-period');saveUi();refresh();}
+    else if(a==='inc'){bump(el.getAttribute('data-key'),1);}
+    else if(a==='dec'){e.stopPropagation();bump(el.getAttribute('data-key'),-1);}
+    else if(a==='edit-unlock'){tryPin(false);}
+    else if(a==='edit-setpin'){tryPin(true);}
+    else if(a==='edit-lock'){delete editUnlocked[state.personId];saveEdit();render();}
+    else if(a==='admin-unlock'){var v=document.getElementById('adminPw').value;if(checkPw(v)){adminUnlocked=true;pwError=false;try{sessionStorage.setItem('cct:admin','1');}catch(e2){}render();}else{pwError=true;render();}}
+    else if(a==='admin-lock'){adminUnlocked=false;try{sessionStorage.removeItem('cct:admin');}catch(e2){}render();}
+    else if(a==='add-person'){var n=document.getElementById('newName').value.trim();var r=document.getElementById('newRole').value;var pn=document.getElementById('newPin').value.trim();if(!n){alert('Enter a name.');return;}if(!/^\d{4,6}$/.test(pn)){alert('Set a PIN of 4\u20136 digits for this rep.');return;}store.addPerson(n,r,encPin(pn)).then(refresh);}
+    else if(a==='archive'){if(window.confirm('Archive this rep? Their history is kept and they can be restored.'))store.archivePerson(el.getAttribute('data-id')).then(refresh);}
+    else if(a==='restore'){store.restorePerson(el.getAttribute('data-id')).then(refresh);}
+    else if(a==='reset-pin'){var np=window.prompt('Enter a new PIN (4\u20136 digits) for this rep:');if(np==null)return;np=np.trim();if(!/^\d{4,6}$/.test(np)){alert('PIN must be 4\u20136 digits.');return;}store.setPin(el.getAttribute('data-id'),encPin(np)).then(refresh);}
+    else if(a==='export-team'){exportTeam();}
+    else if(a==='export-full'){exportFull();}
+    else if(a==='print'){window.print();}
+    else if(a==='clear-all'){if(window.confirm('Clear all preview reps and data from this device?')){['cct:people','cct:entries','cct:ui','cct:seeded'].forEach(function(k){localStorage.removeItem(k);});try{sessionStorage.removeItem('cct:edit');}catch(e2){}editUnlocked={};state.personId=null;refresh();}}
+  });
+
+  seedIfNeeded().then(refresh);
+})();
+</script>
+</body>
+</html>
