@@ -344,7 +344,7 @@
     var html='<div class="trackbar"><div class="who"><label>Rep</label><select class="sel" id="personSel">'+opts+'</select></div><div class="rightctl">'+dateHtml()+segHtml()+'</div></div>';
     html+='<div class="rangelabel">'+rangeLabel()+'</div>';
     var person=personById(state.personId);
-    var c=aggFor(state.personId),dials=dialsOf(c),poc=pocOf(c),first=firstOf(c),second=poc2Of(c),connect=pct(poc,dials),conv=pct(c.demo,poc),firstPct=pct(first,dials),secondPct=pct(second,dials);
+    var c=aggFor(state.personId),dials=dialsOf(c),poc=pocOf(c),first=firstOf(c),second=poc2Of(c)+pocOf(c),connect=pct(poc,dials),conv=pct(c.demo,poc),firstPct=pct(first,dials),secondPct=pct(second,dials);
     var editable=false;
     if(state.period==='daily'){
       if(editUnlocked[state.personId]){
@@ -386,10 +386,10 @@
     var html='<div class="trackbar no-print"><div class="who"><span style="color:#fbbf24">'+svg(IC.award,18)+'</span><b style="font-size:15px">Team Leaderboard</b></div><div class="rightctl">'+dateHtml()+segHtml()+'</div></div>';
     html+='<div class="rangelabel">'+rangeLabel()+'</div>';
     if(!act.length)return html+'<div class="empty">No reps yet. Add your team in <b>Admin</b>.</div>';
-    var rows=act.map(function(p){var a=aggFor(p.id);return {p:p,a:a,dials:dialsOf(a),poc:pocOf(a),demo:a.demo||0,first:firstOf(a),second:poc2Of(a)};});
+    var rows=act.map(function(p){var a=aggFor(p.id);return {p:p,a:a,dials:dialsOf(a),poc:pocOf(a),demo:a.demo||0,first:firstOf(a),second:poc2Of(a)+pocOf(a)};});
     rows.sort(function(x,y){return y.demo-x.demo||y.dials-x.dials;});
     var tot={};for(var k in BLANK)tot[k]=0;rows.forEach(function(r){for(var kk in BLANK)tot[kk]+=r.a[kk];});
-    var tDials=dialsOf(tot),tPoc=pocOf(tot),tFirst=firstOf(tot),tSecond=poc2Of(tot);
+    var tDials=dialsOf(tot),tPoc=pocOf(tot),tFirst=firstOf(tot),tSecond=poc2Of(tot)+pocOf(tot);
     var body=rows.map(function(r,i){var connect=pct(r.poc,r.dials),conv=pct(r.demo,r.poc),fp=pct(r.first,r.dials),sp=pct(r.second,r.dials);
       return '<tr><td class="name"><span class="rank">'+(i+1)+'</span>'+esc(r.p.name)+'<span class="role">'+esc(r.p.role)+'</span></td>'
         +'<td>'+r.dials+'</td><td>'+(fp===null?'\u2014':fp+'%')+'</td><td>'+(sp===null?'\u2014':sp+'%')+'</td><td>'+r.poc+'</td><td class="demo">'+r.demo+'</td><td>'+(connect===null?'\u2014':connect+'%')+'</td><td>'+(conv===null?'\u2014':conv+'%')+'</td></tr>';}).join('');
@@ -453,7 +453,7 @@
     var rows=[head];
     activePeople().forEach(function(p){var a=aggFor(p.id);var dials=dialsOf(a),poc=pocOf(a);
       var line=[p.name,p.role];ALL_OUTCOMES.forEach(function(m){line.push(a[m.key]||0);});
-      line.push(dials,firstOf(a),poc2Of(a),poc,a.demo||0,pct(poc,dials)===null?'':pct(poc,dials),pct(a.demo,poc)===null?'':pct(a.demo,poc));rows.push(line);});
+      line.push(dials,firstOf(a),poc2Of(a)+pocOf(a),poc,a.demo||0,pct(poc,dials)===null?'':pct(poc,dials),pct(a.demo,poc)===null?'':pct(a.demo,poc));rows.push(line);});
     downloadCSV('team-'+state.period+'-'+todayKey()+'.csv',rows);
   }
   function exportFull(){
@@ -463,7 +463,7 @@
       all.sort(function(a,b){return a.day<b.day?1:-1;});
       all.forEach(function(r){var p=personById(r.person_id);if(!p)return;var c=r.counts||{};
         var line=[r.day,p.name,p.role];ALL_OUTCOMES.forEach(function(m){line.push(c[m.key]||0);});
-        line.push(dialsOf(c),firstOf(c),poc2Of(c),pocOf(c),c.demo||0);rows.push(line);});
+        line.push(dialsOf(c),firstOf(c),poc2Of(c)+pocOf(c),pocOf(c),c.demo||0);rows.push(line);});
       downloadCSV('cold-call-history-'+todayKey()+'.csv',rows);
     });
   }
