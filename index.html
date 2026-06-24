@@ -73,7 +73,7 @@
 
   .grid4{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:22px;}
   @media(min-width:560px){.grid4{grid-template-columns:1fr 1fr;}}
-  @media(min-width:900px){.grid4{grid-template-columns:repeat(4,1fr);}}
+  @media(min-width:900px){.grid4{grid-template-columns:repeat(var(--cols,4),minmax(0,1fr));}}
 
   .metric{position:relative;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;
     user-select:none;-webkit-user-select:none;transition:border-color .15s,transform .05s;}
@@ -376,9 +376,9 @@
     var ro=!editable;
     html+='<div class="section"><span style="color:#22d3ee">'+svg(IC.userPlus,14)+'</span><span class="stitle">First time reached out</span><span class="line"></span></div><div class="grid4">';
     FIRST_OUTCOMES.forEach(function(m){html+=metricCard(m,c[m.key]||0,dials,ro);});html+='</div>';
-    html+='<div class="section"><span style="color:#a5b4fc">'+svg(IC.phoneForwarded,14)+'</span><span class="stitle">2nd + Outreach</span><span class="line"></span></div><div class="grid4">';
+    html+='<div class="section"><span style="color:#a5b4fc">'+svg(IC.phoneForwarded,14)+'</span><span class="stitle">2nd + Outreach</span><span class="line"></span></div><div class="grid4" style="--cols:5">';
     DIAL_OUTCOMES.forEach(function(m){html+=metricCard(m,c[m.key]||0,dials,ro);});html+='</div>';
-    html+='<div class="section"><span style="color:#a78bfa">'+svg(IC.users,14)+'</span><span class="stitle">Reached a person (POC)</span><span class="line"></span></div><div class="grid4">';
+    html+='<div class="section"><span style="color:#a78bfa">'+svg(IC.users,14)+'</span><span class="stitle">Reached a person (POC)</span><span class="line"></span></div><div class="grid4" style="--cols:5">';
     POC_OUTCOMES.forEach(function(m){html+=metricCard(m,c[m.key]||0,dials,ro);});html+='</div>';
     return html;
   }
