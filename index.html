@@ -362,7 +362,7 @@
     }
     if(state.period==='daily'){
       html+='<div class="grid-goals">'+goalCard('Dials',dials,person.goal_dials||80,'#6366f1',IC.phone,'#818cf8')+goalCard('Demos',c.demo,person.goal_demos||3,'#10b981',IC.calendarCheck,'#34d399')+'</div>';
-      html+='<div class="grid-chips">'+chip('First Outreach',first+' \u00B7 '+(firstPct===null?0:firstPct)+'%','#67e8f9')+chip('2nd + Outreach',second+' \u00B7 '+(secondPct===null?0:secondPct)+'%','#a5b4fc')+chip('POC Reached',poc,'#c4b5fd')+chip('Connect Rate',connect===null?'\u2014':connect+'%','#7dd3fc')+chip('Demo Conv.',conv===null?'\u2014':conv+'%','#6ee7b7')+'</div>';
+      html+='<div class="grid-chips">'+chip('First Outreach',first+' \u00B7 '+(firstPct===null?0:firstPct)+'%','#67e8f9')+chip('2nd + Outreach',second+' \u00B7 '+(secondPct===null?0:secondPct)+'%','#a5b4fc')+chip('Connect Rate',connect===null?'\u2014':connect+'%','#7dd3fc')+chip('Demo Conv.',conv===null?'\u2014':conv+'%','#6ee7b7')+'</div>';
       if(editable)html+='<p class="helper">One tap per call \u2014 first-time, 2nd+ follow-up, or reached-POC. Dials, First Outreach &amp; POC total themselves; the % on each card is its share of total dials.</p>';
       else html+='<p class="helper">Viewing only. Unlock with the PIN above to log calls.</p>';
     } else {
