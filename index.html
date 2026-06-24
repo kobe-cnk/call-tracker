@@ -162,7 +162,7 @@
      ============================================================ */
   var CONFIG = { supabaseUrl: "https://nlhndvwfvnxdrzfrlqqh.supabase.co", supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5saG5kdndmdm54ZHJ6ZnJscXFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMjc3ODcsImV4cCI6MjA5NzgwMzc4N30.v_7fT2oqfWEZT8Sa8rP2-_Bbd2asIyYZ_IoOxt9yTMs" };
 
-  var BLANK = { vm:0,noAnswer:0,pocNotAvailable:0,newPocName:0,demo:0,interestedCallback:0,callback:0,notInterested:0 };
+  var BLANK = { f_vm:0,f_noAnswer:0,f_pocNotAvailable:0,f_newPocName:0, vm:0,noAnswer:0,pocNotAvailable:0,newPocName:0, demo:0,interestedCallback:0,callback:0,notInterested:0 };
 
   function svg(p,w){w=w||20;return '<svg width="'+w+'" height="'+w+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';}
   var IC={
@@ -188,6 +188,12 @@
     settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'
   };
 
+  var FIRST_OUTCOMES=[
+    {key:"f_vm",label:"Voicemail",sub:"1st call \u2014 VM left",icon:IC.voicemail,accent:"#22d3ee",chipbg:"#083344",chipfg:"#67e8f9"},
+    {key:"f_noAnswer",label:"No Answer",sub:"1st call \u2014 no connect",icon:IC.phoneOff,accent:"#2dd4bf",chipbg:"#042f2e",chipfg:"#5eead4"},
+    {key:"f_pocNotAvailable",label:"POC Not Available",sub:"1st call \u2014 gatekeeper/out",icon:IC.userX,accent:"#38bdf8",chipbg:"#082f49",chipfg:"#7dd3fc"},
+    {key:"f_newPocName",label:"New POC Name",sub:"1st call \u2014 got name",icon:IC.userPlus,accent:"#818cf8",chipbg:"#1e1b4b",chipfg:"#a5b4fc"}
+  ];
   var DIAL_OUTCOMES=[
     {key:"vm",label:"Voicemails",sub:"VM left",icon:IC.voicemail,accent:"#0ea5e9",chipbg:"#082f49",chipfg:"#38bdf8"},
     {key:"noAnswer",label:"No Answer",sub:"No connect",icon:IC.phoneOff,accent:"#71717a",chipbg:"#27272a",chipfg:"#a1a1aa"},
@@ -200,10 +206,13 @@
     {key:"callback",label:"Too Busy",sub:"Wants a callback",icon:IC.phoneForwarded,accent:"#f59e0b",chipbg:"#451a03",chipfg:"#fbbf24"},
     {key:"notInterested",label:"Not Interested",sub:"Passed",icon:IC.thumbsDown,accent:"#f43f5e",chipbg:"#4c0519",chipfg:"#fb7185"}
   ];
-  var ALL_OUTCOMES=DIAL_OUTCOMES.concat(POC_OUTCOMES);
+  var ALL_OUTCOMES=FIRST_OUTCOMES.concat(DIAL_OUTCOMES).concat(POC_OUTCOMES);
+
+  function firstOf(c){return (c.f_vm||0)+(c.f_noAnswer||0)+(c.f_pocNotAvailable||0)+(c.f_newPocName||0);}
+  function poc2Of(c){return (c.vm||0)+(c.noAnswer||0)+(c.pocNotAvailable||0)+(c.newPocName||0);}
 
   function pocOf(c){return (c.demo||0)+(c.interestedCallback||0)+(c.callback||0)+(c.notInterested||0);}
-  function dialsOf(c){return (c.vm||0)+(c.noAnswer||0)+(c.pocNotAvailable||0)+(c.newPocName||0)+pocOf(c);}
+  function dialsOf(c){return firstOf(c)+poc2Of(c)+pocOf(c);}
   function pct(n,d){return d>0?Math.round(n/d*100):null;}
   function uid(){return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
   function esc(s){return String(s).replace(/[&<>"]/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m];});}
@@ -269,7 +278,7 @@
     localStorage.setItem('cct:people',JSON.stringify(people));
     var e={};var today=new Date();function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
     for(var i=0;i<28;i++){var d=new Date(today);d.setDate(today.getDate()-i);var dow=d.getDay();if(dow===0||dow===6)continue;
-      people.forEach(function(p){e[p.id+'|'+keyOf(d)]={vm:rnd(4,14),noAnswer:rnd(6,20),pocNotAvailable:rnd(2,8),newPocName:rnd(1,5),demo:rnd(0,3),interestedCallback:rnd(0,4),callback:rnd(1,6),notInterested:rnd(3,11)};});}
+      people.forEach(function(p){e[p.id+'|'+keyOf(d)]={f_vm:rnd(3,10),f_noAnswer:rnd(4,12),f_pocNotAvailable:rnd(2,7),f_newPocName:rnd(1,4),vm:rnd(4,14),noAnswer:rnd(6,20),pocNotAvailable:rnd(2,8),newPocName:rnd(1,5),demo:rnd(0,3),interestedCallback:rnd(0,4),callback:rnd(1,6),notInterested:rnd(3,11)};});}
     localStorage.setItem('cct:entries',JSON.stringify(e));
     localStorage.setItem('cct:seeded','1');
     return Promise.resolve();
@@ -335,7 +344,7 @@
     var html='<div class="trackbar"><div class="who"><label>Rep</label><select class="sel" id="personSel">'+opts+'</select></div><div class="rightctl">'+dateHtml()+segHtml()+'</div></div>';
     html+='<div class="rangelabel">'+rangeLabel()+'</div>';
     var person=personById(state.personId);
-    var c=aggFor(state.personId),dials=dialsOf(c),poc=pocOf(c),connect=pct(poc,dials),conv=pct(c.demo,poc);
+    var c=aggFor(state.personId),dials=dialsOf(c),poc=pocOf(c),first=firstOf(c),connect=pct(poc,dials),conv=pct(c.demo,poc);
     var editable=false;
     if(state.period==='daily'){
       if(editUnlocked[state.personId]){
@@ -353,17 +362,19 @@
     }
     if(state.period==='daily'){
       html+='<div class="grid-goals">'+goalCard('Dials',dials,person.goal_dials||80,'#6366f1',IC.phone,'#818cf8')+goalCard('Demos',c.demo,person.goal_demos||3,'#10b981',IC.calendarCheck,'#34d399')+'</div>';
-      html+='<div class="grid-chips">'+chip('POC Reached',poc,'#c4b5fd')+chip('Connect Rate',connect===null?'\u2014':connect+'%','#7dd3fc')+chip('Demo Conv.',conv===null?'\u2014':conv+'%','#6ee7b7')+'</div>';
-      if(editable)html+='<p class="helper">One tap per call \u2014 Dials &amp; POC total themselves. The % on each card is its share of total dials.</p>';
+      html+='<div class="grid-chips">'+chip('First Outreach',first,'#67e8f9')+chip('POC Reached',poc,'#c4b5fd')+chip('Connect Rate',connect===null?'\u2014':connect+'%','#7dd3fc')+chip('Demo Conv.',conv===null?'\u2014':conv+'%','#6ee7b7')+'</div>';
+      if(editable)html+='<p class="helper">One tap per call \u2014 first-time, 2nd+ follow-up, or reached-POC. Dials, First Outreach &amp; POC total themselves; the % on each card is its share of total dials.</p>';
       else html+='<p class="helper">Viewing only. Unlock with the PIN above to log calls.</p>';
     } else {
       var gh=goalHits(state.personId,person.goal_dials||80,person.goal_demos||3);
       html+='<div class="grid-goals">'+goalHitCard('Dials goal',gh.dialsHit,gh.logged,person.goal_dials||80,'#6366f1',IC.phone,'#818cf8')+goalHitCard('Demos goal',gh.demosHit,gh.logged,person.goal_demos||3,'#10b981',IC.calendarCheck,'#34d399')+'</div>';
-      html+='<div class="grid-tiles">'+tile('Dials',dials)+tile('POC',poc)+tile('Demos',c.demo,'#34d399')+'</div>';
+      html+='<div class="grid-tiles">'+tile('Dials',dials)+tile('1st Out',first,'#67e8f9')+tile('POC',poc)+tile('Demos',c.demo,'#34d399')+'</div>';
       html+='<div class="grid-chips" style="grid-template-columns:1fr 1fr;">'+chip('Connect Rate',connect===null?'\u2014':connect+'%','#7dd3fc')+chip('Demo Conv.',conv===null?'\u2014':conv+'%','#6ee7b7')+'</div>';
     }
     var ro=!editable;
-    html+='<div class="section"><span class="stitle">Didn\u2019t connect</span><span class="line"></span></div><div class="grid4">';
+    html+='<div class="section"><span style="color:#22d3ee">'+svg(IC.userPlus,14)+'</span><span class="stitle">First time reached out</span><span class="line"></span></div><div class="grid4">';
+    FIRST_OUTCOMES.forEach(function(m){html+=metricCard(m,c[m.key]||0,dials,ro);});html+='</div>';
+    html+='<div class="section"><span class="stitle">Didn\u2019t connect \u2014 2nd+ calls</span><span class="line"></span></div><div class="grid4">';
     DIAL_OUTCOMES.forEach(function(m){html+=metricCard(m,c[m.key]||0,dials,ro);});html+='</div>';
     html+='<div class="section"><span style="color:#a78bfa">'+svg(IC.users,14)+'</span><span class="stitle">Reached a person (POC)</span><span class="line"></span></div><div class="grid4">';
     POC_OUTCOMES.forEach(function(m){html+=metricCard(m,c[m.key]||0,dials,ro);});html+='</div>';
@@ -375,15 +386,15 @@
     var html='<div class="trackbar no-print"><div class="who"><span style="color:#fbbf24">'+svg(IC.award,18)+'</span><b style="font-size:15px">Team Leaderboard</b></div><div class="rightctl">'+dateHtml()+segHtml()+'</div></div>';
     html+='<div class="rangelabel">'+rangeLabel()+'</div>';
     if(!act.length)return html+'<div class="empty">No reps yet. Add your team in <b>Admin</b>.</div>';
-    var rows=act.map(function(p){var a=aggFor(p.id);return {p:p,a:a,dials:dialsOf(a),poc:pocOf(a),demo:a.demo||0};});
+    var rows=act.map(function(p){var a=aggFor(p.id);return {p:p,a:a,dials:dialsOf(a),poc:pocOf(a),demo:a.demo||0,first:firstOf(a)};});
     rows.sort(function(x,y){return y.demo-x.demo||y.dials-x.dials;});
     var tot={};for(var k in BLANK)tot[k]=0;rows.forEach(function(r){for(var kk in BLANK)tot[kk]+=r.a[kk];});
-    var tDials=dialsOf(tot),tPoc=pocOf(tot);
+    var tDials=dialsOf(tot),tPoc=pocOf(tot),tFirst=firstOf(tot);
     var body=rows.map(function(r,i){var connect=pct(r.poc,r.dials),conv=pct(r.demo,r.poc);
       return '<tr><td class="name"><span class="rank">'+(i+1)+'</span>'+esc(r.p.name)+'<span class="role">'+esc(r.p.role)+'</span></td>'
-        +'<td>'+r.dials+'</td><td>'+r.poc+'</td><td class="demo">'+r.demo+'</td><td>'+(connect===null?'\u2014':connect+'%')+'</td><td>'+(conv===null?'\u2014':conv+'%')+'</td></tr>';}).join('');
-    var totRow='<tr class="totals"><td class="name">Team total</td><td>'+tDials+'</td><td>'+tPoc+'</td><td>'+(tot.demo||0)+'</td><td>'+(pct(tPoc,tDials)===null?'\u2014':pct(tPoc,tDials)+'%')+'</td><td>'+(pct(tot.demo,tPoc)===null?'\u2014':pct(tot.demo,tPoc)+'%')+'</td></tr>';
-    html+='<table class="lead"><thead><tr><th class="name">Rep</th><th>Dials</th><th>POC</th><th>Demos</th><th>Conn%</th><th>Conv%</th></tr></thead><tbody>'+body+totRow+'</tbody></table>';
+        +'<td>'+r.dials+'</td><td>'+r.first+'</td><td>'+r.poc+'</td><td class="demo">'+r.demo+'</td><td>'+(connect===null?'\u2014':connect+'%')+'</td><td>'+(conv===null?'\u2014':conv+'%')+'</td></tr>';}).join('');
+    var totRow='<tr class="totals"><td class="name">Team total</td><td>'+tDials+'</td><td>'+tFirst+'</td><td>'+tPoc+'</td><td>'+(tot.demo||0)+'</td><td>'+(pct(tPoc,tDials)===null?'\u2014':pct(tPoc,tDials)+'%')+'</td><td>'+(pct(tot.demo,tPoc)===null?'\u2014':pct(tot.demo,tPoc)+'%')+'</td></tr>';
+    html+='<table class="lead"><thead><tr><th class="name">Rep</th><th>Dials</th><th>1st Out</th><th>POC</th><th>Demos</th><th>Conn%</th><th>Conv%</th></tr></thead><tbody>'+body+totRow+'</tbody></table>';
     html+='<div class="exprow no-print" style="margin-top:14px"><button class="btn-ghost" data-action="export-team">'+svg(IC.download,15)+' Export CSV</button><button class="btn-ghost" data-action="print">'+svg(IC.printer,15)+' Print / Save PDF</button></div>';
     return html;
   }
@@ -434,23 +445,25 @@
     var a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();
     setTimeout(function(){URL.revokeObjectURL(url);a.remove();},150);
   }
-  var OUT_HEADERS=ALL_OUTCOMES.map(function(m){return m.label;});
+  var OUT_HEADERS=FIRST_OUTCOMES.map(function(m){return '1st: '+m.label;})
+    .concat(DIAL_OUTCOMES.map(function(m){return '2nd+: '+m.label;}))
+    .concat(POC_OUTCOMES.map(function(m){return m.label;}));
   function exportTeam(){
-    var head=['Rep','Role'].concat(OUT_HEADERS).concat(['Dials','POC','Demos','Connect %','Demo Conv %']);
+    var head=['Rep','Role'].concat(OUT_HEADERS).concat(['Dials','First Outreach','POC','Demos','Connect %','Demo Conv %']);
     var rows=[head];
     activePeople().forEach(function(p){var a=aggFor(p.id);var dials=dialsOf(a),poc=pocOf(a);
       var line=[p.name,p.role];ALL_OUTCOMES.forEach(function(m){line.push(a[m.key]||0);});
-      line.push(dials,poc,a.demo||0,pct(poc,dials)===null?'':pct(poc,dials),pct(a.demo,poc)===null?'':pct(a.demo,poc));rows.push(line);});
+      line.push(dials,firstOf(a),poc,a.demo||0,pct(poc,dials)===null?'':pct(poc,dials),pct(a.demo,poc)===null?'':pct(a.demo,poc));rows.push(line);});
     downloadCSV('team-'+state.period+'-'+todayKey()+'.csv',rows);
   }
   function exportFull(){
     store.getAllEntries().then(function(all){
-      var head=['Date','Rep','Role'].concat(OUT_HEADERS).concat(['Dials','POC','Demos']);
+      var head=['Date','Rep','Role'].concat(OUT_HEADERS).concat(['Dials','First Outreach','POC','Demos']);
       var rows=[head];
       all.sort(function(a,b){return a.day<b.day?1:-1;});
       all.forEach(function(r){var p=personById(r.person_id);if(!p)return;var c=r.counts||{};
         var line=[r.day,p.name,p.role];ALL_OUTCOMES.forEach(function(m){line.push(c[m.key]||0);});
-        line.push(dialsOf(c),pocOf(c),c.demo||0);rows.push(line);});
+        line.push(dialsOf(c),firstOf(c),pocOf(c),c.demo||0);rows.push(line);});
       downloadCSV('cold-call-history-'+todayKey()+'.csv',rows);
     });
   }
