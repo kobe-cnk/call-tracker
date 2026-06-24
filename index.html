@@ -162,7 +162,7 @@
      ============================================================ */
   var CONFIG = { supabaseUrl: "https://nlhndvwfvnxdrzfrlqqh.supabase.co", supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5saG5kdndmdm54ZHJ6ZnJscXFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMjc3ODcsImV4cCI6MjA5NzgwMzc4N30.v_7fT2oqfWEZT8Sa8rP2-_Bbd2asIyYZ_IoOxt9yTMs" };
 
-  var BLANK = { f_vm:0,f_noAnswer:0,f_pocNotAvailable:0,f_newPocName:0, vm:0,noAnswer:0,pocNotAvailable:0,newPocName:0, demo:0,interestedCallback:0,callback:0,notInterested:0 };
+  var BLANK = { f_vm:0,f_noAnswer:0,f_pocNotAvailable:0,f_newPocName:0, vm:0,noAnswer:0,pocNotAvailable:0,newPocName:0,confirmDemo:0, demo:0,interestedCallback:0,callback:0,notInterested:0,demoConfirmed:0 };
 
   function svg(p,w){w=w||20;return '<svg width="'+w+'" height="'+w+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';}
   var IC={
@@ -198,20 +198,22 @@
     {key:"vm",label:"Voicemails",sub:"VM left",icon:IC.voicemail,accent:"#0ea5e9",chipbg:"#082f49",chipfg:"#38bdf8"},
     {key:"noAnswer",label:"No Answer",sub:"No connect",icon:IC.phoneOff,accent:"#71717a",chipbg:"#27272a",chipfg:"#a1a1aa"},
     {key:"pocNotAvailable",label:"POC Not Available",sub:"Gatekeeper / out",icon:IC.userX,accent:"#64748b",chipbg:"#1e293b",chipfg:"#cbd5e1"},
-    {key:"newPocName",label:"New POC Name",sub:"Got name, not avail.",icon:IC.userPlus,accent:"#6366f1",chipbg:"#1e1b4b",chipfg:"#818cf8"}
+    {key:"newPocName",label:"New POC Name",sub:"Got name, not avail.",icon:IC.userPlus,accent:"#6366f1",chipbg:"#1e1b4b",chipfg:"#818cf8"},
+    {key:"confirmDemo",label:"Attempted to Confirm Demo",sub:"2nd+ \u2014 no connect",icon:IC.phoneForwarded,accent:"#fbbf24",chipbg:"#422006",chipfg:"#fcd34d"}
   ];
   var POC_OUTCOMES=[
     {key:"demo",label:"Demo Booked",sub:"Scheduled",icon:IC.calendarCheck,accent:"#10b981",chipbg:"#022c22",chipfg:"#34d399"},
     {key:"interestedCallback",label:"Interested",sub:"Warm \u2014 wants callback",icon:IC.star,accent:"#14b8a6",chipbg:"#042f2e",chipfg:"#2dd4bf"},
     {key:"callback",label:"Too Busy",sub:"Wants a callback",icon:IC.phoneForwarded,accent:"#f59e0b",chipbg:"#451a03",chipfg:"#fbbf24"},
-    {key:"notInterested",label:"Not Interested",sub:"Passed",icon:IC.thumbsDown,accent:"#f43f5e",chipbg:"#4c0519",chipfg:"#fb7185"}
+    {key:"notInterested",label:"Not Interested",sub:"Passed",icon:IC.thumbsDown,accent:"#f43f5e",chipbg:"#4c0519",chipfg:"#fb7185"},
+    {key:"demoConfirmed",label:"Demo Confirmed",sub:"POC confirmed demo",icon:IC.award,accent:"#22c55e",chipbg:"#052e16",chipfg:"#4ade80"}
   ];
   var ALL_OUTCOMES=FIRST_OUTCOMES.concat(DIAL_OUTCOMES).concat(POC_OUTCOMES);
 
   function firstOf(c){return (c.f_vm||0)+(c.f_noAnswer||0)+(c.f_pocNotAvailable||0)+(c.f_newPocName||0);}
-  function poc2Of(c){return (c.vm||0)+(c.noAnswer||0)+(c.pocNotAvailable||0)+(c.newPocName||0);}
+  function poc2Of(c){return (c.vm||0)+(c.noAnswer||0)+(c.pocNotAvailable||0)+(c.newPocName||0)+(c.confirmDemo||0);}
 
-  function pocOf(c){return (c.demo||0)+(c.interestedCallback||0)+(c.callback||0)+(c.notInterested||0);}
+  function pocOf(c){return (c.demo||0)+(c.interestedCallback||0)+(c.callback||0)+(c.notInterested||0)+(c.demoConfirmed||0);}
   function dialsOf(c){return firstOf(c)+poc2Of(c)+pocOf(c);}
   function pct(n,d){return d>0?Math.round(n/d*100):null;}
   function uid(){return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
@@ -278,7 +280,7 @@
     localStorage.setItem('cct:people',JSON.stringify(people));
     var e={};var today=new Date();function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
     for(var i=0;i<28;i++){var d=new Date(today);d.setDate(today.getDate()-i);var dow=d.getDay();if(dow===0||dow===6)continue;
-      people.forEach(function(p){e[p.id+'|'+keyOf(d)]={f_vm:rnd(3,10),f_noAnswer:rnd(4,12),f_pocNotAvailable:rnd(2,7),f_newPocName:rnd(1,4),vm:rnd(4,14),noAnswer:rnd(6,20),pocNotAvailable:rnd(2,8),newPocName:rnd(1,5),demo:rnd(0,3),interestedCallback:rnd(0,4),callback:rnd(1,6),notInterested:rnd(3,11)};});}
+      people.forEach(function(p){e[p.id+'|'+keyOf(d)]={f_vm:rnd(3,10),f_noAnswer:rnd(4,12),f_pocNotAvailable:rnd(2,7),f_newPocName:rnd(1,4),vm:rnd(4,14),noAnswer:rnd(6,20),pocNotAvailable:rnd(2,8),newPocName:rnd(1,5),confirmDemo:rnd(0,3),demo:rnd(0,3),interestedCallback:rnd(0,4),callback:rnd(1,6),notInterested:rnd(3,11),demoConfirmed:rnd(0,2)};});}
     localStorage.setItem('cct:entries',JSON.stringify(e));
     localStorage.setItem('cct:seeded','1');
     return Promise.resolve();
