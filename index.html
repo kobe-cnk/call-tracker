@@ -344,7 +344,7 @@
     var html='<div class="trackbar"><div class="who"><label>Rep</label><select class="sel" id="personSel">'+opts+'</select></div><div class="rightctl">'+dateHtml()+segHtml()+'</div></div>';
     html+='<div class="rangelabel">'+rangeLabel()+'</div>';
     var person=personById(state.personId);
-    var c=aggFor(state.personId),dials=dialsOf(c),poc=pocOf(c),first=firstOf(c),connect=pct(poc,dials),conv=pct(c.demo,poc);
+    var c=aggFor(state.personId),dials=dialsOf(c),poc=pocOf(c),first=firstOf(c),second=poc2Of(c),connect=pct(poc,dials),conv=pct(c.demo,poc),firstPct=pct(first,dials),secondPct=pct(second,dials);
     var editable=false;
     if(state.period==='daily'){
       if(editUnlocked[state.personId]){
@@ -362,19 +362,19 @@
     }
     if(state.period==='daily'){
       html+='<div class="grid-goals">'+goalCard('Dials',dials,person.goal_dials||80,'#6366f1',IC.phone,'#818cf8')+goalCard('Demos',c.demo,person.goal_demos||3,'#10b981',IC.calendarCheck,'#34d399')+'</div>';
-      html+='<div class="grid-chips">'+chip('First Outreach',first,'#67e8f9')+chip('POC Reached',poc,'#c4b5fd')+chip('Connect Rate',connect===null?'\u2014':connect+'%','#7dd3fc')+chip('Demo Conv.',conv===null?'\u2014':conv+'%','#6ee7b7')+'</div>';
+      html+='<div class="grid-chips">'+chip('First Outreach',first+' \u00B7 '+(firstPct===null?0:firstPct)+'%','#67e8f9')+chip('2nd+ Outreach',second+' \u00B7 '+(secondPct===null?0:secondPct)+'%','#a5b4fc')+chip('POC Reached',poc,'#c4b5fd')+chip('Connect Rate',connect===null?'\u2014':connect+'%','#7dd3fc')+chip('Demo Conv.',conv===null?'\u2014':conv+'%','#6ee7b7')+'</div>';
       if(editable)html+='<p class="helper">One tap per call \u2014 first-time, 2nd+ follow-up, or reached-POC. Dials, First Outreach &amp; POC total themselves; the % on each card is its share of total dials.</p>';
       else html+='<p class="helper">Viewing only. Unlock with the PIN above to log calls.</p>';
     } else {
       var gh=goalHits(state.personId,person.goal_dials||80,person.goal_demos||3);
       html+='<div class="grid-goals">'+goalHitCard('Dials goal',gh.dialsHit,gh.logged,person.goal_dials||80,'#6366f1',IC.phone,'#818cf8')+goalHitCard('Demos goal',gh.demosHit,gh.logged,person.goal_demos||3,'#10b981',IC.calendarCheck,'#34d399')+'</div>';
-      html+='<div class="grid-tiles">'+tile('Dials',dials)+tile('1st Out',first,'#67e8f9')+tile('POC',poc)+tile('Demos',c.demo,'#34d399')+'</div>';
-      html+='<div class="grid-chips" style="grid-template-columns:1fr 1fr;">'+chip('Connect Rate',connect===null?'\u2014':connect+'%','#7dd3fc')+chip('Demo Conv.',conv===null?'\u2014':conv+'%','#6ee7b7')+'</div>';
+      html+='<div class="grid-tiles">'+tile('Dials',dials)+tile('1st Out',first,'#67e8f9')+tile('2nd+ Out',second,'#a5b4fc')+tile('POC',poc)+tile('Demos',c.demo,'#34d399')+'</div>';
+      html+='<div class="grid-chips" style="grid-template-columns:repeat(4,1fr);">'+chip('First Out %',(firstPct===null?0:firstPct)+'%','#67e8f9')+chip('2nd+ Out %',(secondPct===null?0:secondPct)+'%','#a5b4fc')+chip('Connect Rate',connect===null?'\u2014':connect+'%','#7dd3fc')+chip('Demo Conv.',conv===null?'\u2014':conv+'%','#6ee7b7')+'</div>';
     }
     var ro=!editable;
     html+='<div class="section"><span style="color:#22d3ee">'+svg(IC.userPlus,14)+'</span><span class="stitle">First time reached out</span><span class="line"></span></div><div class="grid4">';
     FIRST_OUTCOMES.forEach(function(m){html+=metricCard(m,c[m.key]||0,dials,ro);});html+='</div>';
-    html+='<div class="section"><span class="stitle">Didn\u2019t connect \u2014 2nd+ calls</span><span class="line"></span></div><div class="grid4">';
+    html+='<div class="section"><span style="color:#a5b4fc">'+svg(IC.phoneForwarded,14)+'</span><span class="stitle">2nd+ Outreach</span><span class="line"></span></div><div class="grid4">';
     DIAL_OUTCOMES.forEach(function(m){html+=metricCard(m,c[m.key]||0,dials,ro);});html+='</div>';
     html+='<div class="section"><span style="color:#a78bfa">'+svg(IC.users,14)+'</span><span class="stitle">Reached a person (POC)</span><span class="line"></span></div><div class="grid4">';
     POC_OUTCOMES.forEach(function(m){html+=metricCard(m,c[m.key]||0,dials,ro);});html+='</div>';
@@ -386,15 +386,15 @@
     var html='<div class="trackbar no-print"><div class="who"><span style="color:#fbbf24">'+svg(IC.award,18)+'</span><b style="font-size:15px">Team Leaderboard</b></div><div class="rightctl">'+dateHtml()+segHtml()+'</div></div>';
     html+='<div class="rangelabel">'+rangeLabel()+'</div>';
     if(!act.length)return html+'<div class="empty">No reps yet. Add your team in <b>Admin</b>.</div>';
-    var rows=act.map(function(p){var a=aggFor(p.id);return {p:p,a:a,dials:dialsOf(a),poc:pocOf(a),demo:a.demo||0,first:firstOf(a)};});
+    var rows=act.map(function(p){var a=aggFor(p.id);return {p:p,a:a,dials:dialsOf(a),poc:pocOf(a),demo:a.demo||0,first:firstOf(a),second:poc2Of(a)};});
     rows.sort(function(x,y){return y.demo-x.demo||y.dials-x.dials;});
     var tot={};for(var k in BLANK)tot[k]=0;rows.forEach(function(r){for(var kk in BLANK)tot[kk]+=r.a[kk];});
-    var tDials=dialsOf(tot),tPoc=pocOf(tot),tFirst=firstOf(tot);
-    var body=rows.map(function(r,i){var connect=pct(r.poc,r.dials),conv=pct(r.demo,r.poc);
+    var tDials=dialsOf(tot),tPoc=pocOf(tot),tFirst=firstOf(tot),tSecond=poc2Of(tot);
+    var body=rows.map(function(r,i){var connect=pct(r.poc,r.dials),conv=pct(r.demo,r.poc),fp=pct(r.first,r.dials),sp=pct(r.second,r.dials);
       return '<tr><td class="name"><span class="rank">'+(i+1)+'</span>'+esc(r.p.name)+'<span class="role">'+esc(r.p.role)+'</span></td>'
-        +'<td>'+r.dials+'</td><td>'+r.first+'</td><td>'+r.poc+'</td><td class="demo">'+r.demo+'</td><td>'+(connect===null?'\u2014':connect+'%')+'</td><td>'+(conv===null?'\u2014':conv+'%')+'</td></tr>';}).join('');
-    var totRow='<tr class="totals"><td class="name">Team total</td><td>'+tDials+'</td><td>'+tFirst+'</td><td>'+tPoc+'</td><td>'+(tot.demo||0)+'</td><td>'+(pct(tPoc,tDials)===null?'\u2014':pct(tPoc,tDials)+'%')+'</td><td>'+(pct(tot.demo,tPoc)===null?'\u2014':pct(tot.demo,tPoc)+'%')+'</td></tr>';
-    html+='<table class="lead"><thead><tr><th class="name">Rep</th><th>Dials</th><th>1st Out</th><th>POC</th><th>Demos</th><th>Conn%</th><th>Conv%</th></tr></thead><tbody>'+body+totRow+'</tbody></table>';
+        +'<td>'+r.dials+'</td><td>'+(fp===null?'\u2014':fp+'%')+'</td><td>'+(sp===null?'\u2014':sp+'%')+'</td><td>'+r.poc+'</td><td class="demo">'+r.demo+'</td><td>'+(connect===null?'\u2014':connect+'%')+'</td><td>'+(conv===null?'\u2014':conv+'%')+'</td></tr>';}).join('');
+    var totRow='<tr class="totals"><td class="name">Team total</td><td>'+tDials+'</td><td>'+(pct(tFirst,tDials)===null?'\u2014':pct(tFirst,tDials)+'%')+'</td><td>'+(pct(tSecond,tDials)===null?'\u2014':pct(tSecond,tDials)+'%')+'</td><td>'+tPoc+'</td><td>'+(tot.demo||0)+'</td><td>'+(pct(tPoc,tDials)===null?'\u2014':pct(tPoc,tDials)+'%')+'</td><td>'+(pct(tot.demo,tPoc)===null?'\u2014':pct(tot.demo,tPoc)+'%')+'</td></tr>';
+    html+='<table class="lead"><thead><tr><th class="name">Rep</th><th>Dials</th><th>1st%</th><th>2nd+%</th><th>POC</th><th>Demos</th><th>Conn%</th><th>Conv%</th></tr></thead><tbody>'+body+totRow+'</tbody></table>';
     html+='<div class="exprow no-print" style="margin-top:14px"><button class="btn-ghost" data-action="export-team">'+svg(IC.download,15)+' Export CSV</button><button class="btn-ghost" data-action="print">'+svg(IC.printer,15)+' Print / Save PDF</button></div>';
     return html;
   }
@@ -449,21 +449,21 @@
     .concat(DIAL_OUTCOMES.map(function(m){return '2nd+: '+m.label;}))
     .concat(POC_OUTCOMES.map(function(m){return m.label;}));
   function exportTeam(){
-    var head=['Rep','Role'].concat(OUT_HEADERS).concat(['Dials','First Outreach','POC','Demos','Connect %','Demo Conv %']);
+    var head=['Rep','Role'].concat(OUT_HEADERS).concat(['Dials','First Outreach','2nd+ Outreach','POC','Demos','Connect %','Demo Conv %']);
     var rows=[head];
     activePeople().forEach(function(p){var a=aggFor(p.id);var dials=dialsOf(a),poc=pocOf(a);
       var line=[p.name,p.role];ALL_OUTCOMES.forEach(function(m){line.push(a[m.key]||0);});
-      line.push(dials,firstOf(a),poc,a.demo||0,pct(poc,dials)===null?'':pct(poc,dials),pct(a.demo,poc)===null?'':pct(a.demo,poc));rows.push(line);});
+      line.push(dials,firstOf(a),poc2Of(a),poc,a.demo||0,pct(poc,dials)===null?'':pct(poc,dials),pct(a.demo,poc)===null?'':pct(a.demo,poc));rows.push(line);});
     downloadCSV('team-'+state.period+'-'+todayKey()+'.csv',rows);
   }
   function exportFull(){
     store.getAllEntries().then(function(all){
-      var head=['Date','Rep','Role'].concat(OUT_HEADERS).concat(['Dials','First Outreach','POC','Demos']);
+      var head=['Date','Rep','Role'].concat(OUT_HEADERS).concat(['Dials','First Outreach','2nd+ Outreach','POC','Demos']);
       var rows=[head];
       all.sort(function(a,b){return a.day<b.day?1:-1;});
       all.forEach(function(r){var p=personById(r.person_id);if(!p)return;var c=r.counts||{};
         var line=[r.day,p.name,p.role];ALL_OUTCOMES.forEach(function(m){line.push(c[m.key]||0);});
-        line.push(dialsOf(c),firstOf(c),pocOf(c),c.demo||0);rows.push(line);});
+        line.push(dialsOf(c),firstOf(c),poc2Of(c),pocOf(c),c.demo||0);rows.push(line);});
       downloadCSV('cold-call-history-'+todayKey()+'.csv',rows);
     });
   }
