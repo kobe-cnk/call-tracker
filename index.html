@@ -92,6 +92,20 @@
   .mlabel{margin-top:4px;font-weight:600;color:var(--s200);}
   .msub{font-size:12px;color:var(--s500);}
 
+  .board{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:18px;}
+  @media(min-width:760px){.board{grid-template-columns:repeat(3,1fr);align-items:start;}}
+  .bcol{display:flex;flex-direction:column;gap:8px;}
+  .mini{position:relative;display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:9px 11px;user-select:none;-webkit-user-select:none;transition:border-color .15s,transform .05s;}
+  .mini:not(.ro){cursor:pointer;}
+  .mini:not(.ro):hover{border-color:var(--accent);}
+  .mini:not(.ro):active{transform:scale(.98);}
+  .mchip{width:30px;height:30px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:8px;background:var(--chipbg);color:var(--chipfg);}
+  .mlab{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--s200);line-height:1.15;}
+  .mminus{width:26px;height:26px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:9999px;background:#1e293b;color:var(--s300);border:none;cursor:pointer;transition:background .15s;}
+  .mminus:hover{background:#334155;}
+  .mnum{font-size:21px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--s100);min-width:20px;text-align:right;}
+  .mpct{font-size:11px;font-weight:600;color:var(--s500);margin-left:5px;min-width:26px;text-align:right;}
+
   table.lead{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
   table.lead th,table.lead td{padding:11px 12px;text-align:right;font-size:14px;font-variant-numeric:tabular-nums;}
   table.lead th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--s500);font-weight:700;border-bottom:1px solid var(--border);background:#0b1220;}
@@ -326,6 +340,16 @@
       +'<div class="metric-top"><div class="chip">'+svg(m.icon,20)+'</div>'+ctrls+'</div>'
       +'<div class="num">'+value+badge+'</div><div class="mlabel">'+m.label+'</div><div class="msub">'+m.sub+'</div></div>';
   }
+  function metricMini(m,value,dials,readonly){
+    var pct2=dials>0?'<span class="mpct">'+Math.round(value/dials*100)+'%</span>':'';
+    var minus=readonly?'':'<button class="mminus" data-action="dec" data-key="'+m.key+'">'+svg(IC.minus,14)+'</button>';
+    var click=readonly?'':' data-action="inc" data-key="'+m.key+'"';
+    return '<div class="mini'+(readonly?' ro':'')+'"'+click+' style="--accent:'+m.accent+';--chipbg:'+m.chipbg+';--chipfg:'+m.chipfg+'">'
+      +'<span class="mchip">'+svg(m.icon,16)+'</span>'
+      +'<span class="mlab">'+m.label+'</span>'
+      +minus
+      +'<span class="mnum">'+value+'</span>'+pct2+'</div>';
+  }
   function goalCard(label,value,goal,bar,icon,iconColor){var w=goal>0?Math.min(100,Math.round(value/goal*100)):0;
     return '<div class="gcard"><div class="gcard-top"><span class="lbl"><span style="color:'+iconColor+'">'+svg(icon,16)+'</span>'+label+'</span><span class="frac">'+value+' / '+goal+'</span></div>'
       +'<div class="gcard-mid"><span class="big">'+value+'</span><span class="pct">'+w+'%</span></div><div class="bar"><div style="width:'+w+'%;background:'+bar+'"></div></div></div>';}
@@ -362,24 +386,24 @@
           +(pinError?'<span class="pwerr">Incorrect PIN.</span>':'')+'</div>';
       }
     }
+    var ro=!editable;
+    function bcol(title,iconColor,icon,arr){
+      var h='<div class="bcol"><div class="section"><span style="color:'+iconColor+'">'+svg(icon,14)+'</span><span class="stitle">'+title+'</span><span class="line"></span></div>';
+      arr.forEach(function(m){h+=metricMini(m,c[m.key]||0,dials,ro);});
+      return h+'</div>';
+    }
+    html+='<div class="board">'+bcol('First time reached out','#22d3ee',IC.userPlus,FIRST_OUTCOMES)+bcol('2nd + Outreach','#a5b4fc',IC.phoneForwarded,DIAL_OUTCOMES)+bcol('Reached a POC','#a78bfa',IC.users,POC_OUTCOMES)+'</div>';
+    if(editable)html+='<p class="helper">One tap per call \u2014 tap \u2212 to correct a miss.</p>';
+    else if(state.period==='daily')html+='<p class="helper">Viewing only \u2014 unlock with the PIN above to log.</p>';
     if(state.period==='daily'){
       html+='<div class="grid-goals">'+goalCard('Dials',dials,person.goal_dials||80,'#6366f1',IC.phone,'#818cf8')+goalCard('Demos',c.demo,person.goal_demos||3,'#10b981',IC.calendarCheck,'#34d399')+'</div>';
       html+='<div class="grid-chips" style="grid-template-columns:repeat(4,1fr);">'+chip('First Outreach',first+' \u00B7 '+(firstPct===null?0:firstPct)+'%','#67e8f9')+chip('2nd + Outreach',second+' \u00B7 '+(secondPct===null?0:secondPct)+'%','#a5b4fc')+chip('Connect Rate',connect===null?'\u2014':connect+'%','#7dd3fc')+chip('Demo Conv.',conv===null?'\u2014':conv+'%','#6ee7b7')+'</div>';
-      if(editable)html+='<p class="helper">One tap per call \u2014 first-time, 2nd+ follow-up, or reached-POC. Dials, First Outreach &amp; POC total themselves; the % on each card is its share of total dials.</p>';
-      else html+='<p class="helper">Viewing only. Unlock with the PIN above to log calls.</p>';
     } else {
       var gh=goalHits(state.personId,person.goal_dials||80,person.goal_demos||3);
       html+='<div class="grid-goals">'+goalHitCard('Dials goal',gh.dialsHit,gh.logged,person.goal_dials||80,'#6366f1',IC.phone,'#818cf8')+goalHitCard('Demos goal',gh.demosHit,gh.logged,person.goal_demos||3,'#10b981',IC.calendarCheck,'#34d399')+'</div>';
       html+='<div class="grid-tiles">'+tile('Dials',dials)+tile('1st Out',first,'#67e8f9')+tile('2nd + Out',second,'#a5b4fc')+tile('POC',poc)+tile('Demos',c.demo,'#34d399')+'</div>';
       html+='<div class="grid-chips" style="grid-template-columns:repeat(4,1fr);">'+chip('First Out %',(firstPct===null?0:firstPct)+'%','#67e8f9')+chip('2nd + Out %',(secondPct===null?0:secondPct)+'%','#a5b4fc')+chip('Connect Rate',connect===null?'\u2014':connect+'%','#7dd3fc')+chip('Demo Conv.',conv===null?'\u2014':conv+'%','#6ee7b7')+'</div>';
     }
-    var ro=!editable;
-    html+='<div class="section"><span style="color:#22d3ee">'+svg(IC.userPlus,14)+'</span><span class="stitle">First time reached out</span><span class="line"></span></div><div class="grid4">';
-    FIRST_OUTCOMES.forEach(function(m){html+=metricCard(m,c[m.key]||0,dials,ro);});html+='</div>';
-    html+='<div class="section"><span style="color:#a5b4fc">'+svg(IC.phoneForwarded,14)+'</span><span class="stitle">2nd + Outreach</span><span class="line"></span></div><div class="grid4" style="--cols:5">';
-    DIAL_OUTCOMES.forEach(function(m){html+=metricCard(m,c[m.key]||0,dials,ro);});html+='</div>';
-    html+='<div class="section"><span style="color:#a78bfa">'+svg(IC.users,14)+'</span><span class="stitle">Reached a person (POC)</span><span class="line"></span></div><div class="grid4" style="--cols:5">';
-    POC_OUTCOMES.forEach(function(m){html+=metricCard(m,c[m.key]||0,dials,ro);});html+='</div>';
     return html;
   }
 
