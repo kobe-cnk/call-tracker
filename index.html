@@ -103,8 +103,9 @@
   .mlab{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--s200);line-height:1.15;}
   .mminus{width:26px;height:26px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:9999px;background:#1e293b;color:var(--s300);border:none;cursor:pointer;transition:background .15s;}
   .mminus:hover{background:#334155;}
-  .mnum{font-size:21px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--s100);min-width:20px;text-align:right;}
-  .mpct{font-size:11px;font-weight:600;color:var(--s500);margin-left:5px;min-width:26px;text-align:right;}
+  .mnum{font-size:21px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--s100);min-width:22px;text-align:center;}
+  .mpct{font-size:11px;font-weight:600;color:var(--s500);min-width:26px;text-align:right;}
+  .mplus{width:26px;height:26px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:9999px;background:var(--accent);color:#fff;font-size:19px;font-weight:700;line-height:1;}
 
   table.lead{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
   table.lead th,table.lead td{padding:11px 12px;text-align:right;font-size:14px;font-variant-numeric:tabular-nums;}
@@ -342,13 +343,15 @@
   }
   function metricMini(m,value,dials,readonly){
     var pct2=dials>0?'<span class="mpct">'+Math.round(value/dials*100)+'%</span>':'';
-    var minus=readonly?'':'<button class="mminus" data-action="dec" data-key="'+m.key+'">'+svg(IC.minus,14)+'</button>';
+    var right=readonly
+      ? '<span class="mnum">'+value+'</span>'
+      : '<button class="mminus" data-action="dec" data-key="'+m.key+'">'+svg(IC.minus,14)+'</button><span class="mnum">'+value+'</span><span class="mplus">+</span>';
     var click=readonly?'':' data-action="inc" data-key="'+m.key+'"';
     return '<div class="mini'+(readonly?' ro':'')+'"'+click+' style="--accent:'+m.accent+';--chipbg:'+m.chipbg+';--chipfg:'+m.chipfg+'">'
       +'<span class="mchip">'+svg(m.icon,16)+'</span>'
       +'<span class="mlab">'+m.label+'</span>'
-      +minus
-      +'<span class="mnum">'+value+'</span>'+pct2+'</div>';
+      +pct2
+      +right+'</div>';
   }
   function goalCard(label,value,goal,bar,icon,iconColor){var w=goal>0?Math.min(100,Math.round(value/goal*100)):0;
     return '<div class="gcard"><div class="gcard-top"><span class="lbl"><span style="color:'+iconColor+'">'+svg(icon,16)+'</span>'+label+'</span><span class="frac">'+value+' / '+goal+'</span></div>'
