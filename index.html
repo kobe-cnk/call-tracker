@@ -59,6 +59,19 @@
   .gcard-mid .pct{font-size:12px;color:var(--s500);}
   .bar{margin-top:8px;height:10px;width:100%;border-radius:9999px;background:#1e293b;overflow:hidden;}
   .bar>div{height:100%;border-radius:9999px;transition:width .2s;}
+  .trend{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:18px;}
+  .trend-head{display:flex;justify-content:space-between;align-items:center;color:var(--s300);font-weight:600;font-size:13px;margin-bottom:12px;}
+  .trend-head .tleg{font-size:11px;color:var(--s500);font-weight:500;display:flex;align-items:center;gap:6px;}
+  .tleg i{width:9px;height:9px;border-radius:2px;display:inline-block;}
+  .tleg .d1{background:#6366f1;} .tleg .d2{background:#10b981;}
+  .trend-bars{display:flex;align-items:flex-end;gap:6px;height:118px;}
+  .trend-bars.many{gap:2px;}
+  .tbar{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;min-width:0;}
+  .tcol{width:100%;max-width:26px;height:100%;display:flex;align-items:flex-end;}
+  .tfill{position:relative;width:100%;background:#6366f1;border-radius:5px 5px 0 0;min-height:3px;}
+  .tdemo{position:absolute;bottom:0;left:0;width:100%;background:#10b981;border-radius:0 0 5px 5px;}
+  .tlab{margin-top:6px;font-size:10px;color:var(--s500);white-space:nowrap;}
+  .trend-bars.many .tlab{font-size:8px;}
   .tile{padding:14px 16px;}
   .tile .lbl{color:var(--s500);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
   .tile .val{margin-top:4px;font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;}
@@ -358,6 +371,22 @@
       +'<div class="gcard-mid"><span class="big">'+value+'</span><span class="pct">'+w+'%</span></div><div class="bar"><div style="width:'+w+'%;background:'+bar+'"></div></div></div>';}
   function chip(label,val,color){return '<div class="chip-stat"><div class="lbl">'+label+'</div><div class="val" style="color:'+(color||'#fff')+'">'+val+'</div></div>';}
   function goalHitCard(label,hit,days,target,bar,icon,iconColor){var w=days>0?Math.round(hit/days*100):0;return '<div class="gcard"><div class="gcard-top"><span class="lbl"><span style="color:'+iconColor+'">'+svg(icon,16)+'</span>'+label+'</span><span class="frac">'+hit+' / '+days+' days</span></div><div class="gcard-mid"><span class="big">'+hit+'</span><span class="pct">days hit \u00B7 '+target+'+/day'+(days>0?' \u00B7 '+w+'%':'')+'</span></div><div class="bar"><div style="width:'+w+'%;background:'+bar+'"></div></div></div>';}
+  function trendChart(pid){
+    var rk=rangeKeys(); var start=parseKey(rk[0]), end=parseKey(rk[1]);
+    var byDay={}; cache.entries.forEach(function(r){ if(r.person_id===pid) byDay[r.day]=r.counts; });
+    var days=[]; var d=new Date(start); var guard=0;
+    while(d<=end && guard<400){ var k=keyOf(d); var c=byDay[k]||{}; days.push({k:k,d:new Date(d),dials:dialsOf(c),demos:(c.demo||0)}); d.setDate(d.getDate()+1); guard++; }
+    var maxV=1,total=0; days.forEach(function(x){ if(x.dials>maxV)maxV=x.dials; total+=x.dials; });
+    if(total===0) return '';
+    var many=days.length>10; var dow=['S','M','T','W','T','F','S'];
+    var bars=days.map(function(x){
+      var h=Math.round(x.dials/maxV*100);
+      var demoH=x.dials>0?(x.demos>0?Math.max(8,Math.round(x.demos/x.dials*100)):0):0;
+      var lbl=many?String(x.d.getDate()):dow[x.d.getDay()];
+      return '<div class="tbar" title="'+x.k+': '+x.dials+' dials, '+x.demos+' demos"><div class="tcol"><div class="tfill" style="height:'+h+'%"><div class="tdemo" style="height:'+demoH+'%"></div></div></div><div class="tlab">'+lbl+'</div></div>';
+    }).join('');
+    return '<div class="trend"><div class="trend-head"><span>Daily dials \u00B7 '+total+' total</span><span class="tleg"><i class="d1"></i>dials <i class="d2"></i>demos</span></div><div class="trend-bars'+(many?' many':'')+'">'+bars+'</div></div>';
+  }
   function tile(label,val,color){return '<div class="tile"><div class="lbl">'+label+'</div><div class="val"'+(color?' style="color:'+color+'"':'')+'>'+val+'</div></div>';}
 
   function tabsHtml(){function t(id,icon,label){return '<button class="tab'+(state.tab===id?' active':'')+'" data-action="tab" data-tab="'+id+'">'+svg(icon,16)+label+'</button>';}
@@ -406,6 +435,7 @@
       html+='<div class="grid-goals">'+goalHitCard('Dials goal',gh.dialsHit,gh.logged,person.goal_dials||80,'#6366f1',IC.phone,'#818cf8')+goalHitCard('Demos goal',gh.demosHit,gh.logged,person.goal_demos||3,'#10b981',IC.calendarCheck,'#34d399')+'</div>';
       html+='<div class="grid-tiles">'+tile('Dials',dials)+tile('1st Out',first,'#67e8f9')+tile('2nd + Out',second,'#a5b4fc')+tile('POC',poc)+tile('Demos',c.demo,'#34d399')+'</div>';
       html+='<div class="grid-chips" style="grid-template-columns:repeat(4,1fr);">'+chip('First Out %',(firstPct===null?0:firstPct)+'%','#67e8f9')+chip('2nd + Out %',(secondPct===null?0:secondPct)+'%','#a5b4fc')+chip('Connect Rate',connect===null?'\u2014':connect+'%','#7dd3fc')+chip('Demo Conv.',conv===null?'\u2014':conv+'%','#6ee7b7')+'</div>';
+      html+=trendChart(state.personId);
     }
     return html;
   }
@@ -423,6 +453,10 @@
       return '<tr><td class="name"><span class="rank">'+(i+1)+'</span>'+esc(r.p.name)+'<span class="role">'+esc(r.p.role)+'</span></td>'
         +'<td>'+r.dials+'</td><td>'+(fp===null?'\u2014':fp+'%')+'</td><td>'+(sp===null?'\u2014':sp+'%')+'</td><td>'+r.poc+'</td><td class="demo">'+r.demo+'</td><td>'+(connect===null?'\u2014':connect+'%')+'</td><td>'+(conv===null?'\u2014':conv+'%')+'</td></tr>';}).join('');
     var totRow='<tr class="totals"><td class="name">Team total</td><td>'+tDials+'</td><td>'+(pct(tFirst,tDials)===null?'\u2014':pct(tFirst,tDials)+'%')+'</td><td>'+(pct(tSecond,tDials)===null?'\u2014':pct(tSecond,tDials)+'%')+'</td><td>'+tPoc+'</td><td>'+(tot.demo||0)+'</td><td>'+(pct(tPoc,tDials)===null?'\u2014':pct(tPoc,tDials)+'%')+'</td><td>'+(pct(tot.demo,tPoc)===null?'\u2014':pct(tot.demo,tPoc)+'%')+'</td></tr>';
+    var tdays={}; cache.entries.forEach(function(r){tdays[r.day]=1;}); var loggedDays=Object.keys(tdays).length||1;
+    var tgDials=0,tgDemos=0; act.forEach(function(p){tgDials+=(p.goal_dials||80); tgDemos+=(p.goal_demos||3);});
+    var mult=state.period==='daily'?1:loggedDays;
+    html+='<div class="grid-goals">'+goalCard('Team Dials',tDials,tgDials*mult,'#6366f1',IC.phone,'#818cf8')+goalCard('Team Demos',tot.demo||0,tgDemos*mult,'#10b981',IC.calendarCheck,'#34d399')+'</div>';
     html+='<table class="lead"><thead><tr><th class="name">Rep</th><th>Dials</th><th>1st%</th><th>2nd +%</th><th>POC</th><th>Demos</th><th>Conn%</th><th>Conv%</th></tr></thead><tbody>'+body+totRow+'</tbody></table>';
     html+='<div class="exprow no-print" style="margin-top:14px"><button class="btn-ghost" data-action="export-team">'+svg(IC.download,15)+' Export CSV</button><button class="btn-ghost" data-action="print">'+svg(IC.printer,15)+' Print / Save PDF</button></div>';
     return html;
