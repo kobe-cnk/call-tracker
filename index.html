@@ -366,6 +366,8 @@
       +pct2
       +right+'</div>';
   }
+  function workingDaysInMonth(dt){var y=dt.getFullYear(),m=dt.getMonth();var last=new Date(y,m+1,0).getDate();var c=0;for(var i=1;i<=last;i++){var wd=new Date(y,m,i).getDay();if(wd>=1&&wd<=5)c++;}return c;}
+  function periodGoalMult(){if(state.period==='weekly')return 5;if(state.period==='monthly')return workingDaysInMonth(new Date());return 1;}
   function goalCard(label,value,goal,bar,icon,iconColor){var w=goal>0?Math.min(100,Math.round(value/goal*100)):0;
     return '<div class="gcard"><div class="gcard-top"><span class="lbl"><span style="color:'+iconColor+'">'+svg(icon,16)+'</span>'+label+'</span><span class="frac">'+value+' / '+goal+'</span></div>'
       +'<div class="gcard-mid"><span class="big">'+value+'</span><span class="pct">'+w+'%</span></div><div class="bar"><div style="width:'+w+'%;background:'+bar+'"></div></div></div>';}
@@ -431,8 +433,8 @@
       html+='<div class="grid-goals">'+goalCard('Dials',dials,person.goal_dials||80,'#6366f1',IC.phone,'#818cf8')+goalCard('Demos',c.demo,person.goal_demos||3,'#10b981',IC.calendarCheck,'#34d399')+'</div>';
       html+='<div class="grid-chips" style="grid-template-columns:repeat(4,1fr);">'+chip('First Outreach',first+' \u00B7 '+(firstPct===null?0:firstPct)+'%','#67e8f9')+chip('2nd + Outreach',second+' \u00B7 '+(secondPct===null?0:secondPct)+'%','#a5b4fc')+chip('Connect Rate',connect===null?'\u2014':connect+'%','#7dd3fc')+chip('Demo Conv.',conv===null?'\u2014':conv+'%','#6ee7b7')+'</div>';
     } else {
-      var gh=goalHits(state.personId,person.goal_dials||80,person.goal_demos||3);
-      html+='<div class="grid-goals">'+goalHitCard('Dials goal',gh.dialsHit,gh.logged,person.goal_dials||80,'#6366f1',IC.phone,'#818cf8')+goalHitCard('Demos goal',gh.demosHit,gh.logged,person.goal_demos||3,'#10b981',IC.calendarCheck,'#34d399')+'</div>';
+      var pm=periodGoalMult();
+      html+='<div class="grid-goals">'+goalCard('Dials',dials,(person.goal_dials||80)*pm,'#6366f1',IC.phone,'#818cf8')+goalCard('Demos',c.demo,(person.goal_demos||3)*pm,'#10b981',IC.calendarCheck,'#34d399')+'</div>';
       html+='<div class="grid-tiles">'+tile('Dials',dials)+tile('1st Out',first,'#67e8f9')+tile('2nd + Out',second,'#a5b4fc')+tile('POC',poc)+tile('Demos',c.demo,'#34d399')+'</div>';
       html+='<div class="grid-chips" style="grid-template-columns:repeat(4,1fr);">'+chip('First Out %',(firstPct===null?0:firstPct)+'%','#67e8f9')+chip('2nd + Out %',(secondPct===null?0:secondPct)+'%','#a5b4fc')+chip('Connect Rate',connect===null?'\u2014':connect+'%','#7dd3fc')+chip('Demo Conv.',conv===null?'\u2014':conv+'%','#6ee7b7')+'</div>';
       html+=trendChart(state.personId);
@@ -453,9 +455,8 @@
       return '<tr><td class="name"><span class="rank">'+(i+1)+'</span>'+esc(r.p.name)+'<span class="role">'+esc(r.p.role)+'</span></td>'
         +'<td>'+r.dials+'</td><td>'+(fp===null?'\u2014':fp+'%')+'</td><td>'+(sp===null?'\u2014':sp+'%')+'</td><td>'+r.poc+'</td><td class="demo">'+r.demo+'</td><td>'+(connect===null?'\u2014':connect+'%')+'</td><td>'+(conv===null?'\u2014':conv+'%')+'</td></tr>';}).join('');
     var totRow='<tr class="totals"><td class="name">Team total</td><td>'+tDials+'</td><td>'+(pct(tFirst,tDials)===null?'\u2014':pct(tFirst,tDials)+'%')+'</td><td>'+(pct(tSecond,tDials)===null?'\u2014':pct(tSecond,tDials)+'%')+'</td><td>'+tPoc+'</td><td>'+(tot.demo||0)+'</td><td>'+(pct(tPoc,tDials)===null?'\u2014':pct(tPoc,tDials)+'%')+'</td><td>'+(pct(tot.demo,tPoc)===null?'\u2014':pct(tot.demo,tPoc)+'%')+'</td></tr>';
-    var tdays={}; cache.entries.forEach(function(r){tdays[r.day]=1;}); var loggedDays=Object.keys(tdays).length||1;
     var tgDials=0,tgDemos=0; act.forEach(function(p){tgDials+=(p.goal_dials||80); tgDemos+=(p.goal_demos||3);});
-    var mult=state.period==='daily'?1:loggedDays;
+    var mult=periodGoalMult();
     html+='<div class="grid-goals">'+goalCard('Team Dials',tDials,tgDials*mult,'#6366f1',IC.phone,'#818cf8')+goalCard('Team Demos',tot.demo||0,tgDemos*mult,'#10b981',IC.calendarCheck,'#34d399')+'</div>';
     html+='<table class="lead"><thead><tr><th class="name">Rep</th><th>Dials</th><th>1st%</th><th>2nd +%</th><th>POC</th><th>Demos</th><th>Conn%</th><th>Conv%</th></tr></thead><tbody>'+body+totRow+'</tbody></table>';
     html+='<div class="exprow no-print" style="margin-top:14px"><button class="btn-ghost" data-action="export-team">'+svg(IC.download,15)+' Export CSV</button><button class="btn-ghost" data-action="print">'+svg(IC.printer,15)+' Print / Save PDF</button></div>';
